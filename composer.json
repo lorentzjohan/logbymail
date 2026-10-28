@@ -1,0 +1,28 @@
+{
+    "name": "lorentzjohan/logbymail",
+    "description": "GLPI plugin: sign in with an email address as well as with the login.",
+    "type": "glpi-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "LORENTZ Johan",
+            "homepage": "https://github.com/lorentzjohan"
+        }
+    ],
+    "require": {
+        "php": ">=8.2"
+    },
+    "config": {
+        "autoloader-suffix": "PluginLogbymail",
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "8.2.99"
+        },
+        "sort-packages": true
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "GlpiPlugin\\Logbymail\\Tests\\": "tests/"
+        }
+    }
+}

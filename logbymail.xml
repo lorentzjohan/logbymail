@@ -1,0 +1,39 @@
+<root>
+   <name>LogByMail</name>
+   <key>logbymail</key>
+   <state>stable</state>
+   <logo></logo>
+   <description>
+      <short>
+         <en>Sign in to GLPI with an email address as well as with the login.</en>
+      </short>
+      <long>
+         <en>Users can sign in with their email address instead of their login. Only addresses that belong to a single user are accepted. GLPI keeps handling the password check, the account rules and two-factor authentication. Settings: default or directory-synchronized addresses only, allowed domains, sign-in log, and a list of the shared addresses to clean up.</en>
+      </long>
+   </description>
+   <homepage>https://github.com/lorentzjohan</homepage>
+   <download></download>
+   <issues></issues>
+   <readme></readme>
+   <authors>
+      <author>LORENTZ Johan</author>
+   </authors>
+   <versions>
+      <version>
+         <num>1.0.0</num>
+         <compatibility>~11.0</compatibility>
+         <compatibility>~12.0</compatibility>
+      </version>
+   </versions>
+   <langs>
+      <lang>en_GB</lang>
+   </langs>
+   <license>MIT</license>
+   <tags>
+      <en>
+         <tag>Authentication</tag>
+         <tag>Email</tag>
+         <tag>Login</tag>
+      </en>
+   </tags>
+</root>

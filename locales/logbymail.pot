@@ -1,0 +1,84 @@
+# LogByMail plugin for GLPI
+# Copyright (C) 2026 LORENTZ Johan
+# This file is distributed under the MIT license.
+msgid ""
+msgstr ""
+"Project-Id-Version: logbymail 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+msgid "Login or email"
+msgstr ""
+
+msgid "Nothing was saved."
+msgstr ""
+
+msgid "Too many domains: %d at most."
+msgstr ""
+
+msgid "Settings saved"
+msgstr ""
+
+msgid "Allow sign-in with an email address"
+msgstr ""
+
+msgid "Users can type their email address instead of their login. Password checks, account rules and two-factor authentication stay the same."
+msgstr ""
+
+msgid "Accepted addresses"
+msgstr ""
+
+msgid "Accept only the default address of each user"
+msgstr ""
+
+msgid "Accept only addresses synchronized from the directory (LDAP)"
+msgstr ""
+
+msgid "Prevents signing in with an address that was added by hand to a user profile."
+msgstr ""
+
+msgid "Allowed email domains"
+msgstr ""
+
+msgid "One domain per line, for example example.com. Leave empty to allow every domain."
+msgstr ""
+
+msgid "Display and logging"
+msgstr ""
+
+msgid "Show \"Login or email\" on the login page"
+msgstr ""
+
+msgid "Log email sign-in attempts"
+msgstr ""
+
+msgid "Written to %s. Passwords are never logged."
+msgstr ""
+
+msgid "Shared email addresses"
+msgstr ""
+
+msgid "No shared address: every email address belongs to a single user."
+msgstr ""
+
+msgid "These addresses belong to several users, so they cannot be used to sign in. Each of these users can still sign in with their login."
+msgstr ""
+
+msgid "Email address"
+msgstr ""
+
+msgid "Users"
+msgstr ""
+
+msgid "Only the first %d addresses are shown."
+msgstr ""
+
+msgid "Invalid domain: %s"
+msgid_plural "Invalid domains: %s"
+msgstr[0] ""
+msgstr[1] ""
+

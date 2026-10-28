@@ -1,0 +1,154 @@
+{#
+ # -------------------------------------------------------------------------
+ # LogByMail plugin for GLPI
+ # -------------------------------------------------------------------------
+ # @copyright Copyright (C) 2026 LORENTZ Johan
+ # @license   MIT https://opensource.org/licenses/mit-license.php
+ # @link      https://github.com/lorentzjohan
+ # -------------------------------------------------------------------------
+ #}
+
+{% extends 'layout/page_skeleton.html.twig' %}
+{% import 'components/form/fields_macros.html.twig' as fields %}
+
+{% set title = 'LogByMail' %}
+{% set menu = ['config', 'plugin'] %}
+
+{% set field_options = {
+    'full_width': true,
+    'rand': random(),
+} %}
+
+{% block content %}
+<div class="container-xl">
+    <form name="logbymail_config" action="{{ form_url }}" method="post" data-track-changes="true">
+        {% if csrf_token is not empty %}
+            {# GLPI 11 only: GLPI 12 checks CSRF with request headers #}
+            <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token }}" />
+        {% endif %}
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="ti ti-mail-forward me-2" aria-hidden="true"></i>
+                    LogByMail
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {{ fields.sliderField(
+                        'enabled',
+                        config['enabled'],
+                        __('Allow sign-in with an email address', 'logbymail'),
+                        field_options|merge({
+                            helper: __('Users can type their email address instead of their login. Password checks, account rules and two-factor authentication stay the same.', 'logbymail'),
+                        })
+                    ) }}
+
+                    {{ fields.smallTitle(__('Accepted addresses', 'logbymail')) }}
+
+                    {{ fields.sliderField(
+                        'only_default_email',
+                        config['only_default_email'],
+                        __('Accept only the default address of each user', 'logbymail'),
+                        field_options
+                    ) }}
+
+                    {{ fields.sliderField(
+                        'only_dynamic_email',
+                        config['only_dynamic_email'],
+                        __('Accept only addresses synchronized from the directory (LDAP)', 'logbymail'),
+                        field_options|merge({
+                            helper: __('Prevents signing in with an address that was added by hand to a user profile.', 'logbymail'),
+                        })
+                    ) }}
+
+                    {{ fields.textareaField(
+                        'allowed_domains',
+                        domains,
+                        __('Allowed email domains', 'logbymail'),
+                        field_options|merge({
+                            rows: 4,
+                            helper: __('One domain per line, for example example.com. Leave empty to allow every domain.', 'logbymail'),
+                        })
+                    ) }}
+
+                    {{ fields.smallTitle(__('Display and logging', 'logbymail')) }}
+
+                    {{ fields.sliderField(
+                        'replace_login_label',
+                        config['replace_login_label'],
+                        __('Show "Login or email" on the login page', 'logbymail'),
+                        field_options
+                    ) }}
+
+                    {{ fields.sliderField(
+                        'log_enabled',
+                        config['log_enabled'],
+                        __('Log email sign-in attempts', 'logbymail'),
+                        field_options|merge({
+                            helper: __('Written to %s. Passwords are never logged.', 'logbymail')|format(log_file),
+                        })
+                    ) }}
+                </div>
+            </div>
+            <div class="card-footer d-flex">
+                <button type="submit" name="update" value="1" class="ms-auto btn btn-primary">
+                    <i class="ti ti-device-floppy" aria-hidden="true"></i>
+                    <span>{{ _x('button', 'Save') }}</span>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div class="card mt-3">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="ti ti-users-group me-2" aria-hidden="true"></i>
+                {{ __('Shared email addresses', 'logbymail') }}
+                <span class="badge {{ shared_emails.items|length > 0 ? 'bg-orange-lt' : 'bg-green-lt' }} ms-2">
+                    {{ shared_emails.items|length }}{{ shared_emails.truncated ? '+' : '' }}
+                </span>
+            </h3>
+        </div>
+        <div class="card-body">
+            {% if shared_emails.items|length == 0 %}
+                <p class="mb-0">
+                    <i class="ti ti-circle-check text-success me-1" aria-hidden="true"></i>
+                    {{ __('No shared address: every email address belongs to a single user.', 'logbymail') }}
+                </p>
+            {% else %}
+                <p>
+                    {{ __('These addresses belong to several users, so they cannot be used to sign in. Each of these users can still sign in with their login.', 'logbymail') }}
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover card-table">
+                        <thead>
+                            <tr>
+                                <th>{{ __('Email address', 'logbymail') }}</th>
+                                <th>{{ __('Users', 'logbymail') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in shared_emails.items %}
+                                <tr>
+                                    <td class="text-nowrap">{{ item.email }}</td>
+                                    <td>
+                                        {% for user in item.users %}
+                                            <a href="{{ user.url }}">{{ user.name }}</a>{% if user.fullname is not empty %} <span class="text-muted">({{ user.fullname }})</span>{% endif %}{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if shared_emails.truncated %}
+                    <p class="text-muted mt-2 mb-0">
+                        {{ __('Only the first %d addresses are shown.', 'logbymail')|format(shared_limit) }}
+                    </p>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
