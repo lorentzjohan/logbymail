@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.1]
+
+### Added
+- French translation (fr_FR): the plugin follows the language of the GLPI user.
+
 ## [1.0.0] - 2026-10-28
 
 First release.

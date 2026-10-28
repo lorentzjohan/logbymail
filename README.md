@@ -6,6 +6,7 @@ Lets users sign in to GLPI with their **email address** as well as with their **
 - Author: [lorentzjohan (LORENTZ Johan)](https://github.com/lorentzjohan)
 - License: MIT
 - Compatibility: GLPI 11.x and 12.x (tested on 11.0.12 and 12.0.1), PHP 8.2 to 8.5 (8.3 minimum with GLPI 12)
+- Languages: English, French (follows the language of the GLPI user)
 
 ## How it works
 
@@ -120,7 +121,7 @@ src/SharedEmails.php            Shared addresses report
 src/Controller/ConfigController.php  Configuration page
 templates/config.html.twig      Configuration page view
 public/js/login-label.js        Login page label script
-locales/                        en_GB strings and logbymail.pot translation template
+locales/                        Translations (en_GB, fr_FR) and logbymail.pot template
 tests/Units/                    Unit tests (PHPUnit, GLPI development environment)
 ```
 
