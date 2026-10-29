@@ -37,7 +37,7 @@ use GlpiPlugin\Logbymail\LoginRequestHandler;
 use GlpiPlugin\Logbymail\UserLists;
 
 /** @phpstan-ignore theCodingMachineSafe.function (safe to assume this isn't already defined) */
-define('PLUGIN_LOGBYMAIL_VERSION', '1.1.0');
+define('PLUGIN_LOGBYMAIL_VERSION', '1.2.0');
 
 // Minimal GLPI version, inclusive: GLPI 11.x
 /** @phpstan-ignore theCodingMachineSafe.function (safe to assume this isn't already defined) */

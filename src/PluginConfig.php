@@ -55,6 +55,11 @@ final class PluginConfig
     public const LOG_ENABLED         = 'log_enabled';
     public const INCLUDED_USERS      = 'included_users';
     public const EXCLUDED_USERS      = 'excluded_users';
+    public const THROTTLE_ENABLED     = 'throttle_enabled';
+    public const THROTTLE_MAX_ACCOUNT = 'throttle_max_per_account';
+    public const THROTTLE_MAX_IP      = 'throttle_max_per_ip';
+    public const THROTTLE_WINDOW      = 'throttle_window_minutes';
+    public const THROTTLE_LOCKOUT     = 'throttle_lockout_minutes';
 
     /**
      * Default values, applied on install for the missing settings.
@@ -70,6 +75,23 @@ final class PluginConfig
         self::LOG_ENABLED         => '1',
         self::INCLUDED_USERS      => '[]',
         self::EXCLUDED_USERS      => '[]',
+        self::THROTTLE_ENABLED     => '1',
+        self::THROTTLE_MAX_ACCOUNT => '5',
+        self::THROTTLE_MAX_IP      => '30',
+        self::THROTTLE_WINDOW      => '15',
+        self::THROTTLE_LOCKOUT     => '15',
+    ];
+
+    /**
+     * Allowed range of the numeric throttling settings: [min, max].
+     *
+     * @var array<string, array{int, int}>
+     */
+    public const THROTTLE_RANGES = [
+        self::THROTTLE_MAX_ACCOUNT => [1, 100],
+        self::THROTTLE_MAX_IP      => [0, 1000],
+        self::THROTTLE_WINDOW      => [1, 1440],
+        self::THROTTLE_LOCKOUT     => [1, 1440],
     ];
 
     /**
@@ -134,6 +156,46 @@ final class PluginConfig
     public function isLogEnabled(): bool
     {
         return $this->values[self::LOG_ENABLED] === '1';
+    }
+
+    public function isThrottleEnabled(): bool
+    {
+        return $this->values[self::THROTTLE_ENABLED] === '1';
+    }
+
+    /** Failed sign-ins allowed per account and per client IP within the window. */
+    public function getThrottleMaxPerAccount(): int
+    {
+        return $this->getBoundedInt(self::THROTTLE_MAX_ACCOUNT);
+    }
+
+    /** Failed sign-ins allowed per client IP within the window, all accounts together (0 = no limit). */
+    public function getThrottleMaxPerIp(): int
+    {
+        return $this->getBoundedInt(self::THROTTLE_MAX_IP);
+    }
+
+    public function getThrottleWindowMinutes(): int
+    {
+        return $this->getBoundedInt(self::THROTTLE_WINDOW);
+    }
+
+    public function getThrottleLockoutMinutes(): int
+    {
+        return $this->getBoundedInt(self::THROTTLE_LOCKOUT);
+    }
+
+    /**
+     * Integer value of a throttling setting, kept within its allowed range (the default value
+     * is used when the stored value is not an integer).
+     */
+    private function getBoundedInt(string $setting): int
+    {
+        [$min, $max] = self::THROTTLE_RANGES[$setting];
+        $value       = $this->values[$setting];
+        $number      = ctype_digit($value) ? (int) $value : (int) self::DEFAULTS[$setting];
+
+        return max($min, min($max, $number));
     }
 
     /**

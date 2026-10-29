@@ -2,7 +2,7 @@
 
 Lets users sign in to GLPI with their **email address** as well as with their **login**.
 
-- Version: 1.1.0
+- Version: 1.2.0
 - Author: [lorentzjohan (LORENTZ Johan)](https://github.com/lorentzjohan)
 - License: MIT
 - Compatibility: GLPI 11.x and 12.x (tested on 11.0.12 and 12.0.1), PHP 8.2 to 8.5 (8.3 minimum with GLPI 12)
@@ -35,9 +35,8 @@ When an address is refused, the user sees the usual GLPI error message. Nothing 
 
 ## Installation
 
-1. Copy the `logbymail` folder into the GLPI `plugins/` directory.
-2. Give the web server access to it, for example `chown -R www-data:www-data plugins/logbymail`.
-3. In **Setup > Plugins**, install then enable "LogByMail".
+1. Copy the `logbymail` folder into the GLPI `plugins/` directory. The web server only needs to **read** it: keep it owned by `root` (directories `0755`, files `0644`), like the rest of the GLPI code. The plugin never writes in its folder: settings are stored in the database, the log in the GLPI log directory and the brute-force counters in the GLPI cache.
+2. In **Setup > Plugins**, install then enable "LogByMail".
 
 From the command line:
 
@@ -60,6 +59,10 @@ Open **Setup > Plugins > LogByMail > Configure** (URL: `/plugins/logbymail/confi
 | These users can never sign in with their email | (empty) | Search and select users. They can still sign in with their login. Takes priority over the list above |
 | Show "Login or email" on the login page | Yes | Only changes the label of the login field |
 | Log email sign-in attempts | Yes | Writes to `files/_log/logbymail.log` |
+| Lock sign-in after repeated failures | Yes | Brute-force protection of the login form (see below) |
+| Failed attempts allowed per account | 5 | Counted per account **and** per IP address |
+| Failed attempts allowed per IP address | 30 | All accounts together; 0 = no limit |
+| Counting period / Lockout duration | 15 / 15 min | Failures older than the period are forgotten |
 
 All the rules add up: for example, with an allowed domains list and an included users list, an included user must also use an address from an allowed domain. The page warns about users found in both lists (they are excluded), and a user purged from GLPI is removed from both lists automatically. Both lists accept up to 1,000 users each.
 
@@ -71,6 +74,18 @@ The page also lists the **email addresses shared** by several users. These addre
 
 - Accept only addresses synchronized from the directory: **Yes**. Nobody can then use an address added by hand to a profile, or block a colleague's address by adding it to their own profile.
 - Allowed email domains: your organization's domains only.
+
+## Brute-force protection
+
+GLPI does not limit password attempts on its login form. LogByMail adds this protection to every web sign-in, with a login **or** an email address (an email address counts on the account it belongs to, so alternating both changes nothing).
+
+- **Per account and per IP address:** after 5 failures within 15 minutes, the account is locked for 15 minutes **from this IP address only**. Nobody can lock a user out by failing on purpose from another computer.
+- **Per IP address:** after 30 failures within 15 minutes on any accounts, the IP address is locked for 15 minutes. This stops password spraying.
+- A locked attempt is refused **before any password is checked**, with the GLPI error page, the message "Too many failed sign-in attempts. Try again in N minutes.", the HTTP status `429` and a `Retry-After` header.
+- A successful sign-in (first factor, before two-factor authentication) resets the account counter for this IP.
+- Counters are kept in the GLPI cache: clearing the cache (`php bin/console cache:clear`) unlocks everybody.
+
+**Behind a reverse proxy**, every request comes from the proxy address unless GLPI knows the proxy: declare it in `GLPI_TRUSTED_REVERSE_PROXIES` (GLPI 12, in the `local_define.php` file of the GLPI configuration directory), otherwise the per-IP limit applies to all your users together. Set the per-IP limit to `0` if you cannot declare it.
 
 ## Log
 
@@ -84,6 +99,15 @@ result=ambiguous_email identifier="helpdesk@example.com" login="" users_id=0 own
 ```
 
 Possible `result` values: `resolved`, `unknown_email`, `ambiguous_email`, `not_eligible`, `user_excluded`, `user_not_included`, `ambiguous_login`, `domain_not_allowed`, `login_exists`. For `user_excluded` and `user_not_included`, the line also shows the login and id of the refused user.
+
+The brute-force protection adds two results, for any sign-in (login or email):
+
+```
+result=locked scope=account login="jdoe" duration=900 ip=192.0.2.10
+result=blocked login="jdoe" retry_after=842 ip=192.0.2.10
+```
+
+`locked`: a lockout starts (`scope` is `account`, `ip` or both). `blocked`: an attempt was refused during a lockout.
 
 `resolved` only means that the address was translated into a login. Whether the sign-in then succeeded or failed is recorded in the GLPI events log (Administration > Logs).
 
@@ -99,12 +123,12 @@ The log contains email addresses: set up a rotation, for example with logrotate.
 
 Good to know:
 
-- **GLPI does not limit password attempts on the login form.** The plugin does not change that, but a sign-in with an email address does count as an attempt on the real login. To block brute-force attacks, use fail2ban on failed sign-ins. GLPI answers `400` to a failed sign-in:
+- **fail2ban** can complement the built-in protection by banning an address at the firewall level. GLPI answers `400` to a failed sign-in and LogByMail `429` to a locked one:
 
   ```ini
   # /etc/fail2ban/filter.d/glpi-login.conf
   [Definition]
-  failregex = ^<HOST> .* "POST /front/login\.php HTTP/[0-9.]+" 400
+  failregex = ^<HOST> .* "POST /front/login\.php HTTP/[0-9.]+" (400|429)
   ```
 
 - As with a login, the response time differs slightly depending on whether the account exists. This is GLPI's native behaviour.
@@ -127,6 +151,7 @@ src/LoginPageCustomizer.php     "Login or email" label
 src/GlpiCompat.php              GLPI 11 / 12 differences (CSRF, re-authentication, IP)
 src/SharedEmails.php            Shared addresses report
 src/UserLists.php               Included / excluded users lists (validation, cleanup on purge)
+src/LoginThrottle.php           Brute-force protection (failure counters in the GLPI cache)
 src/Controller/ConfigController.php  Configuration page
 templates/config.html.twig      Configuration page view
 public/js/login-label.js        Login page label script

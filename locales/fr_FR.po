@@ -3,7 +3,7 @@
 # This file is distributed under the MIT license.
 msgid ""
 msgstr ""
-"Project-Id-Version: logbymail 1.1.0\n"
+"Project-Id-Version: logbymail 1.2.0\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2026-10-28 00:00+0000\n"
 "Last-Translator: LORENTZ Johan\n"
@@ -14,17 +14,38 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-msgid "Login or email"
-msgstr "Identifiant ou e-mail"
-
 msgid "Nothing was saved."
 msgstr "Rien n'a été enregistré."
 
+#, php-format
 msgid "Too many domains: %d at most."
 msgstr "Trop de domaines : %d au maximum."
 
+#, php-format
+msgid "Too many users in a list: %d at most."
+msgstr "Trop d'utilisateurs dans une liste : %d au maximum."
+
+#, php-format
+msgid "%1$s: a whole number between %2$d and %3$d is expected."
+msgstr "%1$s : un nombre entier entre %2$d et %3$d est attendu."
+
 msgid "Settings saved"
 msgstr "Paramètres enregistrés"
+
+msgid "Failed attempts allowed per account"
+msgstr "Échecs autorisés par compte"
+
+msgid "Failed attempts allowed per IP address"
+msgstr "Échecs autorisés par adresse IP"
+
+msgid "Counting period (minutes)"
+msgstr "Période de comptage (minutes)"
+
+msgid "Lockout duration (minutes)"
+msgstr "Durée du blocage (minutes)"
+
+msgid "Login or email"
+msgstr "Identifiant ou e-mail"
 
 msgid "Allow sign-in with an email address"
 msgstr "Autoriser la connexion avec une adresse e-mail"
@@ -50,43 +71,8 @@ msgstr "Domaines e-mail autorisés"
 msgid "One domain per line, for example example.com. Leave empty to allow every domain."
 msgstr "Un domaine par ligne, par exemple example.com. Laisser vide pour autoriser tous les domaines."
 
-msgid "Display and logging"
-msgstr "Affichage et journalisation"
-
-msgid "Show \"Login or email\" on the login page"
-msgstr "Afficher « Identifiant ou e-mail » sur la page de connexion"
-
-msgid "Log email sign-in attempts"
-msgstr "Journaliser les tentatives de connexion par e-mail"
-
-msgid "Written to %s. Passwords are never logged."
-msgstr "Écrit dans %s. Les mots de passe ne sont jamais journalisés."
-
-msgid "Shared email addresses"
-msgstr "Adresses e-mail partagées"
-
-msgid "No shared address: every email address belongs to a single user."
-msgstr "Aucune adresse partagée : chaque adresse e-mail appartient à un seul utilisateur."
-
-msgid "These addresses belong to several users, so they cannot be used to sign in. Each of these users can still sign in with their login."
-msgstr "Ces adresses appartiennent à plusieurs utilisateurs : elles ne permettent pas de se connecter. Chacun de ces utilisateurs peut toujours se connecter avec son identifiant."
-
-msgid "Email address"
-msgstr "Adresse e-mail"
-
 msgid "Users"
 msgstr "Utilisateurs"
-
-msgid "Only the first %d addresses are shown."
-msgstr "Seules les %d premières adresses sont affichées."
-
-msgid "Invalid domain: %s"
-msgid_plural "Invalid domains: %s"
-msgstr[0] "Domaine invalide : %s"
-msgstr[1] "Domaines invalides : %s"
-
-msgid "Too many users in a list: %d at most."
-msgstr "Trop d'utilisateurs dans une liste : %d au maximum."
 
 msgid "The stored users lists could not be read: email sign-in is disabled until this page is saved."
 msgstr "Les listes d'utilisateurs enregistrées sont illisibles : la connexion par e-mail est désactivée jusqu'au prochain enregistrement de cette page."
@@ -105,3 +91,59 @@ msgstr "Ils peuvent toujours se connecter avec leur identifiant. Un utilisateur 
 
 msgid "In both lists, so excluded:"
 msgstr "Présents dans les deux listes, donc exclus :"
+
+msgid "Brute-force protection"
+msgstr "Protection contre les attaques par force brute"
+
+msgid "Lock sign-in after repeated failures"
+msgstr "Bloquer la connexion après des échecs répétés"
+
+msgid "Applies to every sign-in on the login form, with a login or an email address. A locked attempt is refused before any password is checked."
+msgstr "S'applique à toute connexion par le formulaire, avec un identifiant ou une adresse e-mail. Une tentative bloquée est refusée avant toute vérification du mot de passe."
+
+msgid "Counted per account and per IP address: a user stays able to sign in from another computer."
+msgstr "Compté par compte et par adresse IP : l'utilisateur peut toujours se connecter depuis un autre poste."
+
+msgid "All accounts together, against password spraying. 0 = no limit. Behind a reverse proxy, declare it in GLPI so that each user keeps their own address."
+msgstr "Tous comptes confondus, contre la pulvérisation de mots de passe. 0 = pas de limite. Derrière un proxy inverse, déclarez-le dans GLPI pour que chaque utilisateur garde sa propre adresse."
+
+msgid "Display and logging"
+msgstr "Affichage et journalisation"
+
+msgid "Show \"Login or email\" on the login page"
+msgstr "Afficher « Identifiant ou e-mail » sur la page de connexion"
+
+msgid "Log email sign-in attempts"
+msgstr "Journaliser les tentatives de connexion par e-mail"
+
+#, php-format
+msgid "Written to %s. Passwords are never logged."
+msgstr "Écrit dans %s. Les mots de passe ne sont jamais journalisés."
+
+msgid "Shared email addresses"
+msgstr "Adresses e-mail partagées"
+
+msgid "No shared address: every email address belongs to a single user."
+msgstr "Aucune adresse partagée : chaque adresse e-mail appartient à un seul utilisateur."
+
+msgid "These addresses belong to several users, so they cannot be used to sign in. Each of these users can still sign in with their login."
+msgstr "Ces adresses appartiennent à plusieurs utilisateurs : elles ne permettent pas de se connecter. Chacun de ces utilisateurs peut toujours se connecter avec son identifiant."
+
+msgid "Email address"
+msgstr "Adresse e-mail"
+
+#, php-format
+msgid "Only the first %d addresses are shown."
+msgstr "Seules les %d premières adresses sont affichées."
+
+#, php-format
+msgid "Invalid domain: %s"
+msgid_plural "Invalid domains: %s"
+msgstr[0] "Domaine invalide : %s"
+msgstr[1] "Domaines invalides : %s"
+
+#, php-format
+msgid "Too many failed sign-in attempts. Try again in %d minute."
+msgid_plural "Too many failed sign-in attempts. Try again in %d minutes."
+msgstr[0] "Trop de tentatives de connexion échouées. Réessayez dans %d minute."
+msgstr[1] "Trop de tentatives de connexion échouées. Réessayez dans %d minutes."

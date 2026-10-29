@@ -63,6 +63,40 @@ final class AuditLog
     }
 
     /**
+     * Attempt refused because the account or the IP is locked.
+     */
+    public static function recordBlocked(string $login, ?string $ip, int $retry_after): void
+    {
+        self::write(sprintf(
+            'result=blocked login="%s" retry_after=%d ip=%s',
+            self::sanitize($login),
+            $retry_after,
+            self::sanitize($ip ?? 'unknown'),
+        ));
+    }
+
+    /**
+     * Lockout started by a failed sign-in.
+     *
+     * @param list<string> $scopes "account" and/or "ip"
+     */
+    public static function recordLockout(string $login, ?string $ip, array $scopes, int $duration): void
+    {
+        self::write(sprintf(
+            'result=locked scope=%s login="%s" duration=%d ip=%s',
+            implode(',', $scopes),
+            self::sanitize($login),
+            $duration,
+            self::sanitize($ip ?? 'unknown'),
+        ));
+    }
+
+    private static function write(string $line): void
+    {
+        Toolbox::logInFile(self::LOG_NAME, $line . "\n", true, false);
+    }
+
+    /**
      * Prevents log forging: no control characters, no double quotes, bounded length.
      */
     private static function sanitize(string $value): string

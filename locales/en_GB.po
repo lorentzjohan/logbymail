@@ -3,7 +3,7 @@
 # This file is distributed under the MIT license.
 msgid ""
 msgstr ""
-"Project-Id-Version: logbymail 1.1.0\n"
+"Project-Id-Version: logbymail 1.2.0\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2026-10-28 00:00+0000\n"
 "Last-Translator: LORENTZ Johan\n"
@@ -14,17 +14,38 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Login or email"
-msgstr "Login or email"
-
 msgid "Nothing was saved."
 msgstr "Nothing was saved."
 
+#, php-format
 msgid "Too many domains: %d at most."
 msgstr "Too many domains: %d at most."
 
+#, php-format
+msgid "Too many users in a list: %d at most."
+msgstr "Too many users in a list: %d at most."
+
+#, php-format
+msgid "%1$s: a whole number between %2$d and %3$d is expected."
+msgstr "%1$s: a whole number between %2$d and %3$d is expected."
+
 msgid "Settings saved"
 msgstr "Settings saved"
+
+msgid "Failed attempts allowed per account"
+msgstr "Failed attempts allowed per account"
+
+msgid "Failed attempts allowed per IP address"
+msgstr "Failed attempts allowed per IP address"
+
+msgid "Counting period (minutes)"
+msgstr "Counting period (minutes)"
+
+msgid "Lockout duration (minutes)"
+msgstr "Lockout duration (minutes)"
+
+msgid "Login or email"
+msgstr "Login or email"
 
 msgid "Allow sign-in with an email address"
 msgstr "Allow sign-in with an email address"
@@ -50,43 +71,8 @@ msgstr "Allowed email domains"
 msgid "One domain per line, for example example.com. Leave empty to allow every domain."
 msgstr "One domain per line, for example example.com. Leave empty to allow every domain."
 
-msgid "Display and logging"
-msgstr "Display and logging"
-
-msgid "Show \"Login or email\" on the login page"
-msgstr "Show \"Login or email\" on the login page"
-
-msgid "Log email sign-in attempts"
-msgstr "Log email sign-in attempts"
-
-msgid "Written to %s. Passwords are never logged."
-msgstr "Written to %s. Passwords are never logged."
-
-msgid "Shared email addresses"
-msgstr "Shared email addresses"
-
-msgid "No shared address: every email address belongs to a single user."
-msgstr "No shared address: every email address belongs to a single user."
-
-msgid "These addresses belong to several users, so they cannot be used to sign in. Each of these users can still sign in with their login."
-msgstr "These addresses belong to several users, so they cannot be used to sign in. Each of these users can still sign in with their login."
-
-msgid "Email address"
-msgstr "Email address"
-
 msgid "Users"
 msgstr "Users"
-
-msgid "Only the first %d addresses are shown."
-msgstr "Only the first %d addresses are shown."
-
-msgid "Invalid domain: %s"
-msgid_plural "Invalid domains: %s"
-msgstr[0] "Invalid domain: %s"
-msgstr[1] "Invalid domains: %s"
-
-msgid "Too many users in a list: %d at most."
-msgstr "Too many users in a list: %d at most."
 
 msgid "The stored users lists could not be read: email sign-in is disabled until this page is saved."
 msgstr "The stored users lists could not be read: email sign-in is disabled until this page is saved."
@@ -105,3 +91,59 @@ msgstr "They can still sign in with their login. A user in both lists is exclude
 
 msgid "In both lists, so excluded:"
 msgstr "In both lists, so excluded:"
+
+msgid "Brute-force protection"
+msgstr "Brute-force protection"
+
+msgid "Lock sign-in after repeated failures"
+msgstr "Lock sign-in after repeated failures"
+
+msgid "Applies to every sign-in on the login form, with a login or an email address. A locked attempt is refused before any password is checked."
+msgstr "Applies to every sign-in on the login form, with a login or an email address. A locked attempt is refused before any password is checked."
+
+msgid "Counted per account and per IP address: a user stays able to sign in from another computer."
+msgstr "Counted per account and per IP address: a user stays able to sign in from another computer."
+
+msgid "All accounts together, against password spraying. 0 = no limit. Behind a reverse proxy, declare it in GLPI so that each user keeps their own address."
+msgstr "All accounts together, against password spraying. 0 = no limit. Behind a reverse proxy, declare it in GLPI so that each user keeps their own address."
+
+msgid "Display and logging"
+msgstr "Display and logging"
+
+msgid "Show \"Login or email\" on the login page"
+msgstr "Show \"Login or email\" on the login page"
+
+msgid "Log email sign-in attempts"
+msgstr "Log email sign-in attempts"
+
+#, php-format
+msgid "Written to %s. Passwords are never logged."
+msgstr "Written to %s. Passwords are never logged."
+
+msgid "Shared email addresses"
+msgstr "Shared email addresses"
+
+msgid "No shared address: every email address belongs to a single user."
+msgstr "No shared address: every email address belongs to a single user."
+
+msgid "These addresses belong to several users, so they cannot be used to sign in. Each of these users can still sign in with their login."
+msgstr "These addresses belong to several users, so they cannot be used to sign in. Each of these users can still sign in with their login."
+
+msgid "Email address"
+msgstr "Email address"
+
+#, php-format
+msgid "Only the first %d addresses are shown."
+msgstr "Only the first %d addresses are shown."
+
+#, php-format
+msgid "Invalid domain: %s"
+msgid_plural "Invalid domains: %s"
+msgstr[0] "Invalid domain: %s"
+msgstr[1] "Invalid domains: %s"
+
+#, php-format
+msgid "Too many failed sign-in attempts. Try again in %d minute."
+msgid_plural "Too many failed sign-in attempts. Try again in %d minutes."
+msgstr[0] "Too many failed sign-in attempts. Try again in %d minute."
+msgstr[1] "Too many failed sign-in attempts. Try again in %d minutes."

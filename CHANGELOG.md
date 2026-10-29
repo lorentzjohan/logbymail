@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0] - 2026-10-29
+
+### Added
+- Brute-force protection of the login form, for sign-ins with a login or an email address: lockout after repeated failures per account and IP address, and per IP address. Locked attempts are refused before any password check, with HTTP status 429 and a `Retry-After` header. Configurable, enabled by default.
+- New log results: `locked` and `blocked`.
+
+### Changed
+- The plugin settings are only read for sign-ins and for the login page: other anonymous requests (REST API, inventory, CalDAV...) no longer run a database query.
+- The client IP follows the GLPI 12 trusted reverse proxies (`GLPI_TRUSTED_REVERSE_PROXIES`).
+- Installation: the plugin folder can stay owned by `root`, the web server only reads it.
+- Line endings are normalized to LF in the repository (`.gitattributes`).
+
 ## [1.1.0] - 2026-10-29
 
 ### Added

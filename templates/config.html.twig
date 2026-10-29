@@ -119,6 +119,59 @@
                         </div>
                     {% endif %}
 
+                    {{ fields.smallTitle(__('Brute-force protection', 'logbymail')) }}
+
+                    {{ fields.sliderField(
+                        'throttle_enabled',
+                        config['throttle_enabled'],
+                        __('Lock sign-in after repeated failures', 'logbymail'),
+                        field_options|merge({
+                            helper: __('Applies to every sign-in on the login form, with a login or an email address. A locked attempt is refused before any password is checked.', 'logbymail'),
+                        })
+                    ) }}
+
+                    {{ fields.numberField(
+                        'throttle_max_per_account',
+                        config['throttle_max_per_account'],
+                        throttle_labels['throttle_max_per_account'],
+                        field_options|merge({
+                            min: throttle_ranges['throttle_max_per_account'][0],
+                            max: throttle_ranges['throttle_max_per_account'][1],
+                            helper: __('Counted per account and per IP address: a user stays able to sign in from another computer.', 'logbymail'),
+                        })
+                    ) }}
+
+                    {{ fields.numberField(
+                        'throttle_max_per_ip',
+                        config['throttle_max_per_ip'],
+                        throttle_labels['throttle_max_per_ip'],
+                        field_options|merge({
+                            min: throttle_ranges['throttle_max_per_ip'][0],
+                            max: throttle_ranges['throttle_max_per_ip'][1],
+                            helper: __('All accounts together, against password spraying. 0 = no limit. Behind a reverse proxy, declare it in GLPI so that each user keeps their own address.', 'logbymail'),
+                        })
+                    ) }}
+
+                    {{ fields.numberField(
+                        'throttle_window_minutes',
+                        config['throttle_window_minutes'],
+                        throttle_labels['throttle_window_minutes'],
+                        field_options|merge({
+                            min: throttle_ranges['throttle_window_minutes'][0],
+                            max: throttle_ranges['throttle_window_minutes'][1],
+                        })
+                    ) }}
+
+                    {{ fields.numberField(
+                        'throttle_lockout_minutes',
+                        config['throttle_lockout_minutes'],
+                        throttle_labels['throttle_lockout_minutes'],
+                        field_options|merge({
+                            min: throttle_ranges['throttle_lockout_minutes'][0],
+                            max: throttle_ranges['throttle_lockout_minutes'][1],
+                        })
+                    ) }}
+
                     {{ fields.smallTitle(__('Display and logging', 'logbymail')) }}
 
                     {{ fields.sliderField(

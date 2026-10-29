@@ -45,7 +45,7 @@ use Throwable;
  *  - CSRF: GLPI 11 validates a `_glpi_csrf_token` field on every POST, GLPI 12 relies on the
  *    `Sec-Fetch-Site` / `Origin` headers and deprecates the token API;
  *  - re-authentication of sensitive pages (Config itemtype): GLPI 12 only;
- *  - client IP helper (`Glpi\Toolbox\IPUtilities`): GLPI 12 only.
+ *  - trusted reverse proxies (`GLPI_TRUSTED_REVERSE_PROXIES`, `Glpi\Toolbox\IPUtilities`): GLPI 12 only.
  */
 final class GlpiCompat
 {
@@ -81,14 +81,21 @@ final class GlpiCompat
      */
     public static function getClientIp(Request $request): ?string
     {
+        // GLPI 12 trusts the reverse proxies declared in GLPI_TRUSTED_REVERSE_PROXIES, but only
+        // after the plugins are initialized. Apply the same configuration now, so that the client
+        // IP is the same during the plugin init and at the end of the request.
         $helper = 'Glpi\\Toolbox\\IPUtilities';
-        if (class_exists($helper) && method_exists($helper, 'getClientIP')) {
-            return $helper::getClientIP();
+        if (
+            class_exists($helper) && method_exists($helper, 'configureTrustedProxies')
+            && defined('GLPI_TRUSTED_REVERSE_PROXIES') && defined('GLPI_REVERSE_PROXY_HEADERS')
+        ) {
+            $helper::configureTrustedProxies(GLPI_TRUSTED_REVERSE_PROXIES, GLPI_REVERSE_PROXY_HEADERS);
         }
 
         try {
             return $request->getClientIp();
         } catch (Throwable) {
+            // Conflicting forwarded headers
             return null;
         }
     }

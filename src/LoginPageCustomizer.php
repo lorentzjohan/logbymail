@@ -33,6 +33,7 @@
 
 namespace GlpiPlugin\Logbymail;
 
+use Glpi\Kernel\Kernel;
 use Glpi\Plugin\Hooks;
 use Session;
 use Throwable;
@@ -48,12 +49,27 @@ final class LoginPageCustomizer
     public const META_NAME = 'logbymail-login-label';
 
     /**
-     * Cheap pre-check done in `plugin_init`: anonymous pages are only displayed to
-     * unauthenticated sessions.
+     * Paths that display the GLPI login form.
+     */
+    private const LOGIN_PAGE_PATHS = ['/', '/index.php'];
+
+    /**
+     * Cheap pre-check done in `plugin_init`, without any database access: only the login page of
+     * an unauthenticated session needs the label. Other anonymous requests (REST API, inventory,
+     * CalDAV, translations...) do not read the plugin settings.
      */
     public static function isNeededForCurrentRequest(): bool
     {
-        return !isCommandLine() && Session::getLoginUserID() === false;
+        /** @var Kernel|null $kernel */
+        global $kernel;
+
+        if (isCommandLine() || Session::getLoginUserID() !== false || !($kernel instanceof Kernel)) {
+            return false;
+        }
+
+        $path = rtrim($kernel->getMainRequest()->getPathInfo(), '/');
+
+        return in_array($path === '' ? '/' : $path, self::LOGIN_PAGE_PATHS, true);
     }
 
     /**

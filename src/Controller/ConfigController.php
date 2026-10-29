@@ -105,6 +105,8 @@ final class ConfigController extends AbstractController
             'excluded_users'         => $excluded_users,
             'users_in_both'          => $users_in_both,
             'users_lists_unreadable' => $users_lists_unreadable,
+            'throttle_labels'        => self::getThrottleLabels(),
+            'throttle_ranges'        => PluginConfig::THROTTLE_RANGES,
         ]);
     }
 
@@ -167,6 +169,27 @@ final class ConfigController extends AbstractController
             $users_lists[$setting] = PluginConfig::encodeUserIds(UserLists::filterExisting($DB, $ids));
         }
 
+        $throttle_labels = self::getThrottleLabels();
+        $throttle        = [PluginConfig::THROTTLE_ENABLED => $input->getBoolean(PluginConfig::THROTTLE_ENABLED) ? '1' : '0'];
+        foreach (PluginConfig::THROTTLE_RANGES as $setting => [$min, $max]) {
+            $value = $submitted[$setting] ?? '';
+            $value = is_string($value) ? trim($value) : '';
+            if (!ctype_digit($value) || (int) $value < $min || (int) $value > $max) {
+                Session::addMessageAfterRedirect(
+                    htmlescape(sprintf(
+                        __('%1$s: a whole number between %2$d and %3$d is expected.', 'logbymail'),
+                        $throttle_labels[$setting],
+                        $min,
+                        $max
+                    )) . ' ' . __s('Nothing was saved.', 'logbymail'),
+                    false,
+                    ERROR
+                );
+                return new RedirectResponse(self::getUrl($request));
+            }
+            $throttle[$setting] = (string) (int) $value;
+        }
+
         PluginConfig::save([
             PluginConfig::ENABLED             => $input->getBoolean(PluginConfig::ENABLED) ? '1' : '0',
             PluginConfig::ONLY_DEFAULT_EMAIL  => $input->getBoolean(PluginConfig::ONLY_DEFAULT_EMAIL) ? '1' : '0',
@@ -174,11 +197,24 @@ final class ConfigController extends AbstractController
             PluginConfig::ALLOWED_DOMAINS     => implode("\n", $domains),
             PluginConfig::REPLACE_LOGIN_LABEL => $input->getBoolean(PluginConfig::REPLACE_LOGIN_LABEL) ? '1' : '0',
             PluginConfig::LOG_ENABLED         => $input->getBoolean(PluginConfig::LOG_ENABLED) ? '1' : '0',
-        ] + $users_lists);
+        ] + $users_lists + $throttle);
 
         Session::addMessageAfterRedirect(__s('Settings saved', 'logbymail'));
 
         return new RedirectResponse(self::getUrl($request));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function getThrottleLabels(): array
+    {
+        return [
+            PluginConfig::THROTTLE_MAX_ACCOUNT => __('Failed attempts allowed per account', 'logbymail'),
+            PluginConfig::THROTTLE_MAX_IP      => __('Failed attempts allowed per IP address', 'logbymail'),
+            PluginConfig::THROTTLE_WINDOW      => __('Counting period (minutes)', 'logbymail'),
+            PluginConfig::THROTTLE_LOCKOUT     => __('Lockout duration (minutes)', 'logbymail'),
+        ];
     }
 
     private static function getUrl(Request $request): string
