@@ -36,7 +36,7 @@ use GlpiPlugin\Logbymail\LoginPageCustomizer;
 use GlpiPlugin\Logbymail\LoginRequestHandler;
 
 /** @phpstan-ignore theCodingMachineSafe.function (safe to assume this isn't already defined) */
-define('PLUGIN_LOGBYMAIL_VERSION', '1.0.0');
+define('PLUGIN_LOGBYMAIL_VERSION', '1.0.1');
 
 // Minimal GLPI version, inclusive: GLPI 11.x
 /** @phpstan-ignore theCodingMachineSafe.function (safe to assume this isn't already defined) */
