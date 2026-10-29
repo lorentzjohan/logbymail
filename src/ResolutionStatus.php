@@ -60,6 +60,12 @@ enum ResolutionStatus: string
     /** A single user owns the address, but not as an allowed kind (default / synchronized) of address. */
     case NOT_ELIGIBLE = 'not_eligible';
 
+    /** The owner is in the excluded users list (exclusion takes priority over inclusion). */
+    case USER_EXCLUDED = 'user_excluded';
+
+    /** An included users list is set and the owner is not in it. */
+    case USER_NOT_INCLUDED = 'user_not_included';
+
     /** The login of the owner is shared by several GLPI accounts (different authentication sources). */
     case AMBIGUOUS_LOGIN = 'ambiguous_login';
 

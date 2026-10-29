@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0] - 2026-10-29
+
+### Added
+- Included users list: when set, only these users can sign in with their email address.
+- Excluded users list: these users can never sign in with their email address. Exclusion takes priority over inclusion.
+- Users are searched and selected as in a ticket. Both lists combine with the existing rules (allowed domains, default or synchronized addresses only).
+- Warning on the configuration page for users found in both lists.
+- Purged users are removed from both lists automatically.
+- New log results: `user_excluded` and `user_not_included`.
+
+### Security
+- An unreadable users list disables sign-in with an email address (fail closed) instead of being read as empty.
+
 ## [1.0.1]
 
 ### Added

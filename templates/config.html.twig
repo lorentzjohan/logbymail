@@ -72,6 +72,53 @@
                         })
                     ) }}
 
+                    {{ fields.smallTitle(__('Users', 'logbymail')) }}
+
+                    {% if users_lists_unreadable %}
+                        <div class="col-12">
+                            <div class="alert alert-danger" role="alert">
+                                <i class="ti ti-alert-octagon me-1" aria-hidden="true"></i>
+                                {{ __('The stored users lists could not be read: email sign-in is disabled until this page is saved.', 'logbymail') }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {{ fields.dropdownField(
+                        'User',
+                        'included_users',
+                        included_users,
+                        __('Only these users can sign in with their email', 'logbymail'),
+                        field_options|merge({
+                            multiple: true,
+                            right: 'all',
+                            helper: __('Leave empty to allow every user. The other rules still apply.', 'logbymail'),
+                        })
+                    ) }}
+
+                    {{ fields.dropdownField(
+                        'User',
+                        'excluded_users',
+                        excluded_users,
+                        __('These users can never sign in with their email', 'logbymail'),
+                        field_options|merge({
+                            multiple: true,
+                            right: 'all',
+                            helper: __('They can still sign in with their login. A user in both lists is excluded.', 'logbymail'),
+                        })
+                    ) }}
+
+                    {% if users_in_both|length > 0 %}
+                        <div class="col-12">
+                            <div class="alert alert-warning" role="alert">
+                                <i class="ti ti-alert-triangle me-1" aria-hidden="true"></i>
+                                {{ __('In both lists, so excluded:', 'logbymail') }}
+                                {% for user in users_in_both %}
+                                    <a href="{{ user.url }}">{{ user.name }}</a>{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
                     {{ fields.smallTitle(__('Display and logging', 'logbymail')) }}
 
                     {{ fields.sliderField(

@@ -41,11 +41,14 @@ use GlpiPlugin\Logbymail\AuditLog;
 use GlpiPlugin\Logbymail\GlpiCompat;
 use GlpiPlugin\Logbymail\PluginConfig;
 use GlpiPlugin\Logbymail\SharedEmails;
+use GlpiPlugin\Logbymail\UserLists;
 use Session;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use UnexpectedValueException;
+use User;
 
 /**
  * Configuration page: /plugins/logbymail/config
@@ -70,14 +73,38 @@ final class ConfigController extends AbstractController
 
         $config = PluginConfig::load();
 
+        // An unreadable stored list (manual database edit) is shown empty, flagged, and
+        // replaced on the next save. Meanwhile, e-mail sign-in is disabled (fail closed).
+        $users_lists_unreadable = false;
+        try {
+            $included_users = UserLists::filterExisting($DB, $config->getIncludedUserIds());
+            $excluded_users = UserLists::filterExisting($DB, $config->getExcludedUserIds());
+        } catch (UnexpectedValueException) {
+            $included_users = [];
+            $excluded_users = [];
+            $users_lists_unreadable = true;
+        }
+
+        $users_in_both = [];
+        foreach (array_intersect($included_users, $excluded_users) as $users_id) {
+            $users_in_both[] = [
+                'name' => getUserName($users_id),
+                'url'  => User::getFormURLWithID($users_id),
+            ];
+        }
+
         return $this->render('@logbymail/config.html.twig', [
-            'form_url'      => self::getUrl($request),
-            'config'        => $config->toArray(),
-            'domains'       => implode("\n", $config->getAllowedDomains()),
-            'shared_emails' => (new SharedEmails($DB))->find(self::SHARED_EMAILS_LIMIT),
-            'shared_limit'  => self::SHARED_EMAILS_LIMIT,
-            'log_file'      => 'files/_log/' . AuditLog::LOG_NAME . '.log',
-            'csrf_token'    => GlpiCompat::getCsrfToken(),
+            'form_url'               => self::getUrl($request),
+            'config'                 => $config->toArray(),
+            'domains'                => implode("\n", $config->getAllowedDomains()),
+            'shared_emails'          => (new SharedEmails($DB))->find(self::SHARED_EMAILS_LIMIT),
+            'shared_limit'           => self::SHARED_EMAILS_LIMIT,
+            'log_file'               => 'files/_log/' . AuditLog::LOG_NAME . '.log',
+            'csrf_token'             => GlpiCompat::getCsrfToken(),
+            'included_users'         => $included_users,
+            'excluded_users'         => $excluded_users,
+            'users_in_both'          => $users_in_both,
+            'users_lists_unreadable' => $users_lists_unreadable,
         ]);
     }
 
@@ -87,6 +114,8 @@ final class ConfigController extends AbstractController
     {
         Session::checkRight(Config::$rightname, UPDATE);
         GlpiCompat::checkConfigReAuthentication();
+
+        global $DB;
 
         $input = $request->request;
 
@@ -117,6 +146,27 @@ final class ConfigController extends AbstractController
             return new RedirectResponse(self::getUrl($request));
         }
 
+        // An emptied multiple dropdown is submitted as an empty string, a filled one as an
+        // array: read the raw value instead of InputBag::all($key), which rejects strings.
+        $submitted   = $input->all();
+        $users_lists = [];
+        foreach ([PluginConfig::INCLUDED_USERS, PluginConfig::EXCLUDED_USERS] as $setting) {
+            $ids = PluginConfig::normalizeUserIds($submitted[$setting] ?? []);
+            if (count($ids) > PluginConfig::MAX_LISTED_USERS) {
+                Session::addMessageAfterRedirect(
+                    htmlescape(sprintf(
+                        __('Too many users in a list: %d at most.', 'logbymail'),
+                        PluginConfig::MAX_LISTED_USERS
+                    )) . ' ' . __s('Nothing was saved.', 'logbymail'),
+                    false,
+                    ERROR
+                );
+                return new RedirectResponse(self::getUrl($request));
+            }
+
+            $users_lists[$setting] = PluginConfig::encodeUserIds(UserLists::filterExisting($DB, $ids));
+        }
+
         PluginConfig::save([
             PluginConfig::ENABLED             => $input->getBoolean(PluginConfig::ENABLED) ? '1' : '0',
             PluginConfig::ONLY_DEFAULT_EMAIL  => $input->getBoolean(PluginConfig::ONLY_DEFAULT_EMAIL) ? '1' : '0',
@@ -124,7 +174,7 @@ final class ConfigController extends AbstractController
             PluginConfig::ALLOWED_DOMAINS     => implode("\n", $domains),
             PluginConfig::REPLACE_LOGIN_LABEL => $input->getBoolean(PluginConfig::REPLACE_LOGIN_LABEL) ? '1' : '0',
             PluginConfig::LOG_ENABLED         => $input->getBoolean(PluginConfig::LOG_ENABLED) ? '1' : '0',
-        ]);
+        ] + $users_lists);
 
         Session::addMessageAfterRedirect(__s('Settings saved', 'logbymail'));
 

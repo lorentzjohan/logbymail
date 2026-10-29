@@ -34,6 +34,8 @@
 namespace GlpiPlugin\Logbymail;
 
 use Config;
+use JsonException;
+use UnexpectedValueException;
 
 use function Safe\preg_match;
 use function Safe\preg_split;
@@ -51,6 +53,8 @@ final class PluginConfig
     public const ALLOWED_DOMAINS     = 'allowed_domains';
     public const REPLACE_LOGIN_LABEL = 'replace_login_label';
     public const LOG_ENABLED         = 'log_enabled';
+    public const INCLUDED_USERS      = 'included_users';
+    public const EXCLUDED_USERS      = 'excluded_users';
 
     /**
      * Default values, applied on install for the missing settings.
@@ -64,12 +68,19 @@ final class PluginConfig
         self::ALLOWED_DOMAINS     => '',
         self::REPLACE_LOGIN_LABEL => '1',
         self::LOG_ENABLED         => '1',
+        self::INCLUDED_USERS      => '[]',
+        self::EXCLUDED_USERS      => '[]',
     ];
 
     /**
      * Maximum number of allowed domains, to keep the setting readable and the checks cheap.
      */
     public const MAX_DOMAINS = 50;
+
+    /**
+     * Maximum number of users in each of the included / excluded lists.
+     */
+    public const MAX_LISTED_USERS = 1000;
 
     /**
      * @param array<string, string> $values
@@ -123,6 +134,84 @@ final class PluginConfig
     public function isLogEnabled(): bool
     {
         return $this->values[self::LOG_ENABLED] === '1';
+    }
+
+    /**
+     * Users allowed to sign in with their e-mail address.
+     *
+     * @return list<int> Empty list = every user is allowed (other rules still apply).
+     *
+     * @throws UnexpectedValueException When the stored list is unreadable (fail closed).
+     */
+    public function getIncludedUserIds(): array
+    {
+        return self::decodeUserIds($this->values[self::INCLUDED_USERS], self::INCLUDED_USERS);
+    }
+
+    /**
+     * Users never allowed to sign in with their e-mail address (takes priority over inclusion).
+     *
+     * @return list<int>
+     *
+     * @throws UnexpectedValueException When the stored list is unreadable (fail closed).
+     */
+    public function getExcludedUserIds(): array
+    {
+        return self::decodeUserIds($this->values[self::EXCLUDED_USERS], self::EXCLUDED_USERS);
+    }
+
+    /**
+     * Normalizes a list of user ids: positive integers only, no duplicates, sorted.
+     *
+     * @return list<int>
+     */
+    public static function normalizeUserIds(mixed $ids): array
+    {
+        if (!is_array($ids)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($ids as $id) {
+            if (is_int($id) || (is_string($id) && ctype_digit($id))) {
+                $id = (int) $id;
+                if ($id > 0) {
+                    $normalized[$id] = $id;
+                }
+            }
+        }
+        sort($normalized);
+
+        return array_values($normalized);
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public static function encodeUserIds(array $ids): string
+    {
+        return json_encode(self::normalizeUserIds($ids), JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * An unreadable list must never be read as "empty": an empty exclusion list would let
+     * excluded users in, an empty inclusion list would let everybody in. The exception
+     * makes the login handler fall back to the native GLPI login (no e-mail sign-in).
+     *
+     * @return list<int>
+     */
+    private static function decodeUserIds(string $json, string $setting): array
+    {
+        try {
+            $decoded = json_decode($json, true, 4, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw new UnexpectedValueException(sprintf('The "%s" setting is not valid JSON.', $setting), 0, $e);
+        }
+        if (!is_array($decoded) || !array_is_list($decoded)) {
+            throw new UnexpectedValueException(sprintf('The "%s" setting is not a list of user ids.', $setting));
+        }
+
+        return self::normalizeUserIds($decoded);
     }
 
     /**

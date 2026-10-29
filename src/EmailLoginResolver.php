@@ -52,7 +52,9 @@ use function Safe\preg_match;
  *     are never usable;
  *  5. the matching address must be of an allowed kind (default / synchronized),
  *     when these restrictions are enabled;
- *  6. the login of the owner must itself be unique in GLPI, so that the native
+ *  6. the owner must not be in the excluded users list, and must be in the included
+ *     users list when this list is set — exclusion takes priority over inclusion;
+ *  7. the login of the owner must itself be unique in GLPI, so that the native
  *     authentication cannot land on another account sharing the same login.
  *
  * Every query uses the GLPI query builder (bound values, no string concatenation).
@@ -127,16 +129,26 @@ final class EmailLoginResolver
             return Resolution::refused(ResolutionStatus::NOT_ELIGIBLE, $identifier, 1);
         }
 
-        $login = (string) $owner_row['name'];
+        $login    = (string) $owner_row['name'];
+        $users_id = (int) $owner_row['users_id'];
         if ($login === '') {
             return Resolution::refused(ResolutionStatus::UNKNOWN_EMAIL, $identifier, 1);
+        }
+
+        // Exclusion is checked first: a user in both lists is excluded.
+        if (in_array($users_id, $this->config->getExcludedUserIds(), true)) {
+            return Resolution::refused(ResolutionStatus::USER_EXCLUDED, $identifier, 1, $login, $users_id);
+        }
+        $included_users = $this->config->getIncludedUserIds();
+        if ($included_users !== [] && !in_array($users_id, $included_users, true)) {
+            return Resolution::refused(ResolutionStatus::USER_NOT_INCLUDED, $identifier, 1, $login, $users_id);
         }
 
         if ($this->countUsersByLogin($login) !== 1) {
             return Resolution::refused(ResolutionStatus::AMBIGUOUS_LOGIN, $identifier, 1);
         }
 
-        return Resolution::resolved($identifier, $login, (int) $owner_row['users_id']);
+        return Resolution::resolved($identifier, $login, $users_id);
     }
 
     /**

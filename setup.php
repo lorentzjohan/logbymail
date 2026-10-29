@@ -34,9 +34,10 @@
 use Glpi\Plugin\Hooks;
 use GlpiPlugin\Logbymail\LoginPageCustomizer;
 use GlpiPlugin\Logbymail\LoginRequestHandler;
+use GlpiPlugin\Logbymail\UserLists;
 
 /** @phpstan-ignore theCodingMachineSafe.function (safe to assume this isn't already defined) */
-define('PLUGIN_LOGBYMAIL_VERSION', '1.0.1');
+define('PLUGIN_LOGBYMAIL_VERSION', '1.1.0');
 
 // Minimal GLPI version, inclusive: GLPI 11.x
 /** @phpstan-ignore theCodingMachineSafe.function (safe to assume this isn't already defined) */
@@ -63,6 +64,9 @@ function plugin_init_logbymail(): void
     global $PLUGIN_HOOKS;
 
     $PLUGIN_HOOKS[Hooks::CONFIG_PAGE]['logbymail'] = 'config';
+
+    // Keep the included / excluded users lists clean when a user is purged.
+    $PLUGIN_HOOKS[Hooks::ITEM_PURGE]['logbymail'] = [User::class => [UserLists::class, 'onUserPurge']];
 
     // Translate an e-mail address typed in the login form into the matching GLPI login,
     // before GLPI's own authentication process (and 2FA) runs.

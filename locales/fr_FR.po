@@ -3,7 +3,7 @@
 # This file is distributed under the MIT license.
 msgid ""
 msgstr ""
-"Project-Id-Version: logbymail 1.0.0\n"
+"Project-Id-Version: logbymail 1.1.0\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2026-10-28 00:00+0000\n"
 "Last-Translator: LORENTZ Johan\n"
@@ -84,3 +84,24 @@ msgid "Invalid domain: %s"
 msgid_plural "Invalid domains: %s"
 msgstr[0] "Domaine invalide : %s"
 msgstr[1] "Domaines invalides : %s"
+
+msgid "Too many users in a list: %d at most."
+msgstr "Trop d'utilisateurs dans une liste : %d au maximum."
+
+msgid "The stored users lists could not be read: email sign-in is disabled until this page is saved."
+msgstr "Les listes d'utilisateurs enregistrées sont illisibles : la connexion par e-mail est désactivée jusqu'au prochain enregistrement de cette page."
+
+msgid "Only these users can sign in with their email"
+msgstr "Seuls ces utilisateurs peuvent se connecter avec leur e-mail"
+
+msgid "Leave empty to allow every user. The other rules still apply."
+msgstr "Laisser vide pour autoriser tous les utilisateurs. Les autres règles s'appliquent toujours."
+
+msgid "These users can never sign in with their email"
+msgstr "Ces utilisateurs ne peuvent jamais se connecter avec leur e-mail"
+
+msgid "They can still sign in with their login. A user in both lists is excluded."
+msgstr "Ils peuvent toujours se connecter avec leur identifiant. Un utilisateur présent dans les deux listes est exclu."
+
+msgid "In both lists, so excluded:"
+msgstr "Présents dans les deux listes, donc exclus :"

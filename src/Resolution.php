@@ -46,9 +46,14 @@ final readonly class Resolution
         public int $owners_count = 0,
     ) {}
 
-    public static function refused(ResolutionStatus $status, string $identifier, int $owners_count = 0): self
-    {
-        return new self($status, $identifier, owners_count: $owners_count);
+    public static function refused(
+        ResolutionStatus $status,
+        string $identifier,
+        int $owners_count = 0,
+        ?string $login = null,
+        ?int $users_id = null,
+    ): self {
+        return new self($status, $identifier, $login, $users_id, $owners_count);
     }
 
     public static function resolved(string $identifier, string $login, int $users_id): self

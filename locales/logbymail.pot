@@ -3,7 +3,7 @@
 # This file is distributed under the MIT license.
 msgid ""
 msgstr ""
-"Project-Id-Version: logbymail 1.0.0\n"
+"Project-Id-Version: logbymail 1.1.0\n"
 "Report-Msgid-Bugs-To: \n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -82,3 +82,23 @@ msgid_plural "Invalid domains: %s"
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "Too many users in a list: %d at most."
+msgstr ""
+
+msgid "The stored users lists could not be read: email sign-in is disabled until this page is saved."
+msgstr ""
+
+msgid "Only these users can sign in with their email"
+msgstr ""
+
+msgid "Leave empty to allow every user. The other rules still apply."
+msgstr ""
+
+msgid "These users can never sign in with their email"
+msgstr ""
+
+msgid "They can still sign in with their login. A user in both lists is excluded."
+msgstr ""
+
+msgid "In both lists, so excluded:"
+msgstr ""

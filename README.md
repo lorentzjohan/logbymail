@@ -2,7 +2,7 @@
 
 Lets users sign in to GLPI with their **email address** as well as with their **login**.
 
-- Version: 1.0.0
+- Version: 1.1.0
 - Author: [lorentzjohan (LORENTZ Johan)](https://github.com/lorentzjohan)
 - License: MIT
 - Compatibility: GLPI 11.x and 12.x (tested on 11.0.12 and 12.0.1), PHP 8.2 to 8.5 (8.3 minimum with GLPI 12)
@@ -28,7 +28,8 @@ Everything else is GLPI's native, unmodified process:
 | 3 | No account uses this address as its login (mail server authentication, UPN…) | The native login wins |
 | 4 | **The address belongs to a single user** who is not in the trash, whatever the kind of address (default, secondary, synchronized), case-insensitive | Refused: a shared address can never be used |
 | 5 | The address is of an allowed kind: default and/or LDAP-synchronized, depending on the settings | Refused |
-| 6 | The owner's login is itself unique in GLPI (for example, no local + LDAP duplicate) | Refused |
+| 6 | The owner is not in the excluded users list, and is in the included users list when this list is set. **Exclusion takes priority**: a user in both lists is excluded | Refused |
+| 7 | The owner's login is itself unique in GLPI (for example, no local + LDAP duplicate) | Refused |
 
 When an address is refused, the user sees the usual GLPI error message. Nothing tells whether the address exists, is shared or is excluded, so account enumeration is not made easier. The reason is written to the plugin log.
 
@@ -55,8 +56,14 @@ Open **Setup > Plugins > LogByMail > Configure** (URL: `/plugins/logbymail/confi
 | Accept only the default address of each user | No | Secondary addresses cannot be used to sign in |
 | Accept only addresses synchronized from the directory (LDAP) | No | An address added by hand to a user profile cannot be used to sign in |
 | Allowed email domains | (empty = all) | One domain per line; exact match (`example.com` does not allow `sub.example.com`) |
+| Only these users can sign in with their email | (empty = all users) | Search and select users, as in a ticket. Other users must sign in with their login |
+| These users can never sign in with their email | (empty) | Search and select users. They can still sign in with their login. Takes priority over the list above |
 | Show "Login or email" on the login page | Yes | Only changes the label of the login field |
 | Log email sign-in attempts | Yes | Writes to `files/_log/logbymail.log` |
+
+All the rules add up: for example, with an allowed domains list and an included users list, an included user must also use an address from an allowed domain. The page warns about users found in both lists (they are excluded), and a user purged from GLPI is removed from both lists automatically. Both lists accept up to 1,000 users each.
+
+The users lists only affect sign-in **with an email address**. A user whose GLPI login is itself an email address (mail server authentication, UPN) signs in with that login, which these lists do not affect.
 
 The page also lists the **email addresses shared** by several users. These addresses are refused at sign-in: this is the list to clean up.
 
@@ -76,7 +83,7 @@ result=resolved identifier="jane.doe@example.com" login="jdoe" users_id=7 owners
 result=ambiguous_email identifier="helpdesk@example.com" login="" users_id=0 owners=2 ip=192.0.2.10
 ```
 
-Possible `result` values: `resolved`, `unknown_email`, `ambiguous_email`, `not_eligible`, `ambiguous_login`, `domain_not_allowed`, `login_exists`.
+Possible `result` values: `resolved`, `unknown_email`, `ambiguous_email`, `not_eligible`, `user_excluded`, `user_not_included`, `ambiguous_login`, `domain_not_allowed`, `login_exists`. For `user_excluded` and `user_not_included`, the line also shows the login and id of the refused user.
 
 `resolved` only means that the address was translated into a login. Whether the sign-in then succeeded or failed is recorded in the GLPI events log (Administration > Logs).
 
@@ -87,6 +94,7 @@ The log contains email addresses: set up a rotation, for example with logrotate.
 - The plugin only acts on a web `POST` to `/front/login.php`. It ignores the CLI, the REST API, the high-level API, CalDAV and cross-site requests (same `Sec-Fetch-Site` / `Origin` rules as the GLPI 12 CSRF protection). On GLPI 11, GLPI's token-based CSRF check also applies.
 - SQL queries go through the GLPI query builder (bound values) and never modify the database.
 - Any unexpected error is written to the GLPI PHP logs. Sign-in then falls back to the native behaviour, and the plugin is not disabled.
+- The users lists fail closed: if a stored list cannot be read (for example after a manual database edit), sign-in with an email address is disabled until the configuration page is saved again. Sign-in with a login keeps working.
 - The configuration page requires the `config` update right, plus a re-authentication on GLPI 12. CSRF protection is handled by GLPI: form token on GLPI 11, request headers on GLPI 12. Inputs are validated, and an invalid domain blocks the save.
 
 Good to know:
@@ -118,6 +126,7 @@ src/AuditLog.php                Log file files/_log/logbymail.log
 src/LoginPageCustomizer.php     "Login or email" label
 src/GlpiCompat.php              GLPI 11 / 12 differences (CSRF, re-authentication, IP)
 src/SharedEmails.php            Shared addresses report
+src/UserLists.php               Included / excluded users lists (validation, cleanup on purge)
 src/Controller/ConfigController.php  Configuration page
 templates/config.html.twig      Configuration page view
 public/js/login-label.js        Login page label script
