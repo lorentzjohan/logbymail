@@ -1,0 +1,49 @@
+name: "Continuous integration"
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["*"]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"   # every Monday at 3 am: detects a new GLPI release that breaks the plugin
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  matrix-glpi11:
+    uses: "glpi-project/plugin-ci-workflows/.github/workflows/generate-ci-matrix.yml@v1"
+    with:
+      glpi-version: "11.0.x"
+  ci-glpi11:
+    name: "GLPI ${{ matrix.glpi-version }} - php:${{ matrix.php-version }} - ${{ matrix.db-image }}"
+    needs: "matrix-glpi11"
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.matrix-glpi11.outputs.matrix) }}
+    uses: "glpi-project/plugin-ci-workflows/.github/workflows/continuous-integration.yml@v1"
+    with:
+      plugin-key: "logbymail"
+      glpi-version: "${{ matrix.glpi-version }}"
+      php-version: "${{ matrix.php-version }}"
+      db-image: "${{ matrix.db-image }}"
+
+  matrix-glpi12:
+    uses: "glpi-project/plugin-ci-workflows/.github/workflows/generate-ci-matrix.yml@v1"
+    with:
+      glpi-version: "12.0.x"
+  ci-glpi12:
+    name: "GLPI ${{ matrix.glpi-version }} - php:${{ matrix.php-version }} - ${{ matrix.db-image }}"
+    needs: "matrix-glpi12"
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.matrix-glpi12.outputs.matrix) }}
+    uses: "glpi-project/plugin-ci-workflows/.github/workflows/continuous-integration.yml@v1"
+    with:
+      plugin-key: "logbymail"
+      glpi-version: "${{ matrix.glpi-version }}"
+      php-version: "${{ matrix.php-version }}"
+      db-image: "${{ matrix.db-image }}"

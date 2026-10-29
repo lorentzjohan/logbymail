@@ -1,3 +1,5 @@
+[![Continuous integration](https://github.com/lorentzjohan/logbymail/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/lorentzjohan/logbymail/actions/workflows/continuous-integration.yml)
+
 # LogByMail — GLPI 11 / 12 plugin
 
 Lets users sign in to GLPI with their **email address** as well as with their **login**.
