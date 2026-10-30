@@ -1,4 +1,5 @@
 <div align="center">
+
 [![Continuous integration](https://github.com/lorentzjohan/logbymail/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/lorentzjohan/logbymail/actions/workflows/continuous-integration.yml)
 [![Latest release](https://img.shields.io/github/v/release/lorentzjohan/logbymail?sort=semver&label=release)](https://github.com/lorentzjohan/logbymail/releases/latest)
 [![License: MIT](https://img.shields.io/github/license/lorentzjohan/logbymail)](LICENSE)
@@ -8,6 +9,7 @@
 
 [![GLPI 11 | 12](https://img.shields.io/badge/GLPI-11.x%20%7C%2012.x-blue)](https://glpi-project.org)
 [![PHP 8.2 to 8.5](https://img.shields.io/badge/PHP-8.2%20to%208.5-777BB4?logo=php&logoColor=white)](https://www.php.net/supported-versions.php)
+
 </div>
 
 # LogByMail — GLPI 11 / 12 plugin
