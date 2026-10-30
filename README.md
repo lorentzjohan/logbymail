@@ -1,3 +1,4 @@
+<div align="center">
 [![Continuous integration](https://github.com/lorentzjohan/logbymail/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/lorentzjohan/logbymail/actions/workflows/continuous-integration.yml)
 [![Latest release](https://img.shields.io/github/v/release/lorentzjohan/logbymail?sort=semver&label=release)](https://github.com/lorentzjohan/logbymail/releases/latest)
 [![License: MIT](https://img.shields.io/github/license/lorentzjohan/logbymail)](LICENSE)
@@ -7,10 +8,7 @@
 
 [![GLPI 11 | 12](https://img.shields.io/badge/GLPI-11.x%20%7C%2012.x-blue)](https://glpi-project.org)
 [![PHP 8.2 to 8.5](https://img.shields.io/badge/PHP-8.2%20to%208.5-777BB4?logo=php&logoColor=white)](https://www.php.net/supported-versions.php)
-[![PHPStan: level max](https://img.shields.io/badge/PHPStan-level%20max-brightgreen)](phpstan.neon)
-[![Psalm: taint analysis](https://img.shields.io/badge/Psalm-taint%20analysis-brightgreen)](psalm.xml)
-[![Code style: PHP-CS-Fixer](https://img.shields.io/badge/code%20style-PHP--CS--Fixer-brightgreen)](.php-cs-fixer.php)
-[![Languages: EN | FR](https://img.shields.io/badge/languages-EN%20%7C%20FR-informational)](locales)
+</div>
 
 # LogByMail — GLPI 11 / 12 plugin
 
