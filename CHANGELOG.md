@@ -4,6 +4,7 @@
 
 ### Added
 - Brute-force protection of the login form, for sign-ins with a login or an email address: lockout after repeated failures per account and IP address, and per IP address. Locked attempts are refused before any password check, with HTTP status 429 and a `Retry-After` header. Configurable, enabled by default.
+- Brute-force protection: cache keys are built with SHA-256 instead of SHA-1. SHA-1 was not used for security (only to build cache keys), but it is reported as a weak algorithm by code analysis tools. Existing counters are reset by the update.
 - New log results: `locked` and `blocked`.
 
 ### Changed

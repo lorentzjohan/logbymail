@@ -152,7 +152,7 @@ final readonly class LoginThrottle
     {
         $counters = [$this->accountKey($login, $ip) => $this->max_per_account];
         if ($this->max_per_ip > 0 && $ip !== null && $ip !== '') {
-            $counters[self::KEY_PREFIX . self::SCOPE_IP . '_' . sha1($ip)] = $this->max_per_ip;
+            $counters[self::KEY_PREFIX . self::SCOPE_IP . '_' . $this->hashKey($ip)] = $this->max_per_ip;
         }
 
         return $counters;
@@ -163,7 +163,17 @@ final readonly class LoginThrottle
      */
     private function accountKey(string $login, ?string $ip): string
     {
-        return self::KEY_PREFIX . self::SCOPE_ACCOUNT . '_' . sha1(mb_strtolower(trim($login)) . '|' . ($ip ?? ''));
+        return self::KEY_PREFIX . self::SCOPE_ACCOUNT . '_' . $this->hashKey(mb_strtolower(trim($login)) . '|' . ($ip ?? ''));
+    }
+
+    /**
+     * Hexadecimal digest used to build cache keys (fixed length, PSR-16 safe characters, no
+     * login or IP address stored in clear in the cache). SHA-256: no weak algorithm, even
+     * for a non-security use.
+     */
+    private function hashKey(string $value): string
+    {
+        return hash('sha256', $value);
     }
 
     /**
