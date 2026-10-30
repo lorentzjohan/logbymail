@@ -63,7 +63,9 @@ final class UserLists
             'WHERE'  => ['id' => $ids],
         ]);
         foreach ($iterator as $row) {
-            $existing[] = (int) $row['id'];
+            if (is_array($row)) {
+                $existing[] = Scalar::toInt($row['id'] ?? 0);
+            }
         }
 
         return PluginConfig::normalizeUserIds($existing);
@@ -96,11 +98,11 @@ final class UserLists
             if ($changes !== []) {
                 PluginConfig::save($changes);
             }
-        } catch (Throwable $e) {
+        } catch (Throwable $throwable) {
             global $PHPLOGGER;
             $PHPLOGGER->error(
-                sprintf('LogByMail: could not remove purged user from the users lists: %s', $e->getMessage()),
-                ['exception' => $e]
+                sprintf('LogByMail: could not remove purged user from the users lists: %s', $throwable->getMessage()),
+                ['exception' => $throwable],
             );
         }
     }

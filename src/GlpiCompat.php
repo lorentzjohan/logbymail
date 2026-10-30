@@ -34,6 +34,7 @@
 namespace GlpiPlugin\Logbymail;
 
 use Config;
+use Glpi\Toolbox\IPUtilities;
 use Session;
 use Symfony\Component\HttpFoundation\Request;
 use Throwable;
@@ -62,7 +63,13 @@ final class GlpiCompat
      */
     public static function getCsrfToken(): string
     {
-        return self::usesCsrfTokens() ? (string) Session::getNewCSRFToken() : '';
+        if (!self::usesCsrfTokens()) {
+            return '';
+        }
+
+        // Deprecated in GLPI 12, only called on GLPI 11.
+        // @phpstan-ignore staticMethod.deprecated
+        return Scalar::toString(Session::getNewCSRFToken());
     }
 
     /**
@@ -71,6 +78,8 @@ final class GlpiCompat
      */
     public static function checkConfigReAuthentication(): void
     {
+        // Always true on GLPI 12, always false on GLPI 11.
+        // @phpstan-ignore function.alreadyNarrowedType, function.impossibleType
         if (method_exists(Config::class, 'checkReAuthenticationOrRedirect')) {
             Config::checkReAuthenticationOrRedirect();
         }
@@ -84,8 +93,12 @@ final class GlpiCompat
         // GLPI 12 trusts the reverse proxies declared in GLPI_TRUSTED_REVERSE_PROXIES, but only
         // after the plugins are initialized. Apply the same configuration now, so that the client
         // IP is the same during the plugin init and at the end of the request.
-        $helper = 'Glpi\\Toolbox\\IPUtilities';
+        // The class only exists in GLPI 12.
+        // @phpstan-ignore class.notFound
+        $helper = IPUtilities::class;
         if (
+            // Always true on GLPI 12, always false on GLPI 11.
+            // @phpstan-ignore function.alreadyNarrowedType, function.impossibleType
             class_exists($helper) && method_exists($helper, 'configureTrustedProxies')
             && defined('GLPI_TRUSTED_REVERSE_PROXIES') && defined('GLPI_REVERSE_PROXY_HEADERS')
         ) {

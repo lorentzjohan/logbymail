@@ -59,7 +59,7 @@ use function Safe\preg_match;
  *
  * Every query uses the GLPI query builder (bound values, no string concatenation).
  */
-final class EmailLoginResolver
+final readonly class EmailLoginResolver
 {
     /**
      * RFC 5321 limit for a forward path.
@@ -67,8 +67,8 @@ final class EmailLoginResolver
     public const MAX_IDENTIFIER_LENGTH = 254;
 
     public function __construct(
-        private readonly DBmysql $db,
-        private readonly PluginConfig $config,
+        private DBmysql $db,
+        private PluginConfig $config,
     ) {}
 
     public function resolve(string $raw_identifier): Resolution
@@ -94,9 +94,10 @@ final class EmailLoginResolver
         // which is broader than the strict comparison below: an address that merely looks like
         // another user's one is enough to make it ambiguous.
         $owners = array_unique(array_column($addresses, 'users_id'));
-        if (count($owners) === 0) {
+        if ($owners === []) {
             return Resolution::refused(ResolutionStatus::UNKNOWN_EMAIL, $identifier);
         }
+
         if (count($owners) > 1) {
             return Resolution::refused(ResolutionStatus::AMBIGUOUS_EMAIL, $identifier, count($owners));
         }
@@ -106,15 +107,17 @@ final class EmailLoginResolver
         $owner_row = null;
         $strict_match_found = false;
         foreach ($addresses as $address) {
-            if (strcasecmp(trim((string) $address['email']), $identifier) !== 0) {
+            if (strcasecmp(trim($address['email']), $identifier) !== 0) {
                 continue;
             }
+
             $strict_match_found = true;
 
-            if ($this->config->onlyDefaultEmail() && (int) $address['is_default'] !== 1) {
+            if ($this->config->onlyDefaultEmail() && $address['is_default'] !== 1) {
                 continue;
             }
-            if ($this->config->onlyDynamicEmail() && (int) $address['is_dynamic'] !== 1) {
+
+            if ($this->config->onlyDynamicEmail() && $address['is_dynamic'] !== 1) {
                 continue;
             }
 
@@ -125,12 +128,13 @@ final class EmailLoginResolver
         if (!$strict_match_found) {
             return Resolution::refused(ResolutionStatus::UNKNOWN_EMAIL, $identifier);
         }
+
         if ($owner_row === null) {
             return Resolution::refused(ResolutionStatus::NOT_ELIGIBLE, $identifier, 1);
         }
 
-        $login    = (string) $owner_row['name'];
-        $users_id = (int) $owner_row['users_id'];
+        $login    = $owner_row['name'];
+        $users_id = $owner_row['users_id'];
         if ($login === '') {
             return Resolution::refused(ResolutionStatus::UNKNOWN_EMAIL, $identifier, 1);
         }
@@ -139,6 +143,7 @@ final class EmailLoginResolver
         if (in_array($users_id, $this->config->getExcludedUserIds(), true)) {
             return Resolution::refused(ResolutionStatus::USER_EXCLUDED, $identifier, 1, $login, $users_id);
         }
+
         $included_users = $this->config->getIncludedUserIds();
         if ($included_users !== [] && !in_array($users_id, $included_users, true)) {
             return Resolution::refused(ResolutionStatus::USER_NOT_INCLUDED, $identifier, 1, $login, $users_id);
@@ -178,13 +183,13 @@ final class EmailLoginResolver
             'WHERE' => ['name' => $login],
         ])->current();
 
-        return (int) ($result['cpt'] ?? 0);
+        return is_array($result) ? Scalar::toInt($result['cpt'] ?? 0) : 0;
     }
 
     /**
      * Addresses equal to the identifier (database collation), owned by users not in the trash.
      *
-     * @return list<array{users_id: int|string, email: ?string, is_default: int|string, is_dynamic: int|string, name: ?string}>
+     * @return list<array{users_id: int, email: string, is_default: int, is_dynamic: int, name: string}>
      */
     private function findAddresses(string $identifier): array
     {
@@ -193,11 +198,11 @@ final class EmailLoginResolver
 
         $iterator = $this->db->request([
             'SELECT'     => [
-                "$emails_table.users_id",
-                "$emails_table.email",
-                "$emails_table.is_default",
-                "$emails_table.is_dynamic",
-                "$users_table.name",
+                $emails_table . '.users_id',
+                $emails_table . '.email',
+                $emails_table . '.is_default',
+                $emails_table . '.is_dynamic',
+                $users_table . '.name',
             ],
             'FROM'       => $emails_table,
             'INNER JOIN' => [
@@ -209,14 +214,24 @@ final class EmailLoginResolver
                 ],
             ],
             'WHERE'      => [
-                "$emails_table.email"     => $identifier,
-                "$users_table.is_deleted" => 0,
+                $emails_table . '.email'     => $identifier,
+                $users_table . '.is_deleted' => 0,
             ],
         ]);
 
         $addresses = [];
         foreach ($iterator as $row) {
-            $addresses[] = $row;
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $addresses[] = [
+                'users_id'   => Scalar::toInt($row['users_id'] ?? 0),
+                'email'      => Scalar::toString($row['email'] ?? ''),
+                'is_default' => Scalar::toInt($row['is_default'] ?? 0),
+                'is_dynamic' => Scalar::toInt($row['is_dynamic'] ?? 0),
+                'name'       => Scalar::toString($row['name'] ?? ''),
+            ];
         }
 
         return $addresses;

@@ -52,7 +52,7 @@ use function Safe\preg_match;
  * (password check against the right source, LDAP, account state, 2FA prompt / enforcement,
  * remember me, events log) is GLPI's untouched native process.
  */
-final class LoginRequestHandler
+final readonly class LoginRequestHandler
 {
     public const LOGIN_FIELD = 'login_name';
 
@@ -62,8 +62,8 @@ final class LoginRequestHandler
     private const LOGIN_PATH_PATTERN = '#^/front/login\.php(?:/.*)?$#D';
 
     public function __construct(
-        private readonly PluginConfig $config,
-        private readonly EmailLoginResolver $resolver,
+        private PluginConfig $config,
+        private EmailLoginResolver $resolver,
     ) {}
 
     /**
@@ -102,16 +102,17 @@ final class LoginRequestHandler
                 global $PHPLOGGER;
                 $PHPLOGGER->error(
                     sprintf('LogByMail: e-mail resolution skipped after an unexpected error: %s', $e->getMessage()),
-                    ['exception' => $e]
+                    ['exception' => $e],
                 );
                 $account = trim($submitted_login);
             }
+
             $handler->throttle($request, $account);
-        } catch (Throwable $e) {
+        } catch (Throwable $throwable) {
             global $PHPLOGGER;
             $PHPLOGGER->error(
-                sprintf('LogByMail: sign-in handling skipped after an unexpected error: %s', $e->getMessage()),
-                ['exception' => $e]
+                sprintf('LogByMail: sign-in handling skipped after an unexpected error: %s', $throwable->getMessage()),
+                ['exception' => $throwable],
             );
         }
     }
@@ -176,10 +177,16 @@ final class LoginRequestHandler
             } catch (Throwable) {
                 return false;
             }
-            if (!is_array($origin_parts) || !isset($origin_parts['host']) || $origin_parts['host'] === '') {
+
+            $origin_host = is_array($origin_parts) ? ($origin_parts['host'] ?? null) : null;
+            if (!is_string($origin_host) || $origin_host === '') {
                 return false;
             }
-            $origin_host = $origin_parts['host'] . (isset($origin_parts['port']) ? ':' . $origin_parts['port'] : '');
+
+            $origin_port = $origin_parts['port'] ?? null;
+            if (is_int($origin_port)) {
+                $origin_host .= ':' . $origin_port;
+            }
 
             return strcasecmp($origin_host, $host) === 0;
         }
@@ -204,7 +211,7 @@ final class LoginRequestHandler
 
         if ($resolution->isResolved()) {
             $login = (string) $resolution->login;
-            self::replaceSubmittedLogin($request, $login);
+            $this->replaceSubmittedLogin($request, $login);
         }
 
         if ($this->config->isLogEnabled() && $resolution->status->isAuditable()) {
@@ -221,7 +228,7 @@ final class LoginRequestHandler
     private function throttle(Request $request, string $account): void
     {
         $throttle = LoginThrottle::fromConfig($this->config);
-        if ($throttle === null) {
+        if (!$throttle instanceof LoginThrottle) {
             return;
         }
 
@@ -232,7 +239,8 @@ final class LoginRequestHandler
             if ($log) {
                 AuditLog::recordBlocked($account, $ip, $remaining);
             }
-            self::denyLockedAttempt($request, $remaining);
+
+            $this->denyLockedAttempt($request, $remaining);
         }
 
         // GLPI checks the password after the plugins are initialized: the result is only known
@@ -255,16 +263,18 @@ final class LoginRequestHandler
                 $throttle->recordSuccess($account, $ip);
                 return;
             }
+
             if (http_response_code() !== Response::HTTP_BAD_REQUEST) {
                 return;
             }
+
             $locked = $throttle->recordFailure($account, $ip);
             if ($locked !== [] && $log) {
                 AuditLog::recordLockout($account, $ip, $locked, $throttle->getLockoutSeconds());
             }
-        } catch (Throwable $e) {
+        } catch (Throwable $throwable) {
             global $PHPLOGGER;
-            $PHPLOGGER->error(sprintf('LogByMail: sign-in attempt not counted: %s', $e->getMessage()), ['exception' => $e]);
+            $PHPLOGGER->error(sprintf('LogByMail: sign-in attempt not counted: %s', $throwable->getMessage()), ['exception' => $throwable]);
         }
     }
 
@@ -272,7 +282,7 @@ final class LoginRequestHandler
      * Answers "429 Too Many Requests" with the GLPI login error page, before GLPI checks any
      * password, and stops the request.
      */
-    private static function denyLockedAttempt(Request $request, int $seconds): never
+    private function denyLockedAttempt(Request $request, int $seconds): never
     {
         Plugin::loadLang('logbymail');
         $minutes = max(1, (int) ceil($seconds / 60));
@@ -281,9 +291,9 @@ final class LoginRequestHandler
                 'Too many failed sign-in attempts. Try again in %d minute.',
                 'Too many failed sign-in attempts. Try again in %d minutes.',
                 $minutes,
-                'logbymail'
+                'logbymail',
             ),
-            $minutes
+            $minutes,
         );
 
         try {
@@ -300,15 +310,18 @@ final class LoginRequestHandler
             'Retry-After'  => (string) $seconds,
         ]))->send();
 
+        // The response is sent: GLPI must not go on and check the password.
+        // @phpstan-ignore glpi.forbidExit
         exit();
     }
 
-    private static function replaceSubmittedLogin(Request $request, string $login): void
+    private function replaceSubmittedLogin(Request $request, string $login): void
     {
         $_POST[self::LOGIN_FIELD] = $login;
         if (isset($_REQUEST[self::LOGIN_FIELD])) {
             $_REQUEST[self::LOGIN_FIELD] = $login;
         }
+
         // Keep the Symfony request consistent with the superglobals.
         $request->request->set(self::LOGIN_FIELD, $login);
     }

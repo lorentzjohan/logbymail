@@ -42,9 +42,9 @@ use UserEmail;
  *
  * These addresses are refused at sign-in ({@see ResolutionStatus::AMBIGUOUS_EMAIL}).
  */
-final class SharedEmails
+final readonly class SharedEmails
 {
-    public function __construct(private readonly DBmysql $db) {}
+    public function __construct(private DBmysql $db) {}
 
     /**
      * @return array{
@@ -66,28 +66,30 @@ final class SharedEmails
             ],
         ];
         $where = [
-            "$users_table.is_deleted" => 0,
-            'NOT'                     => ["$emails_table.email" => null],
-            "$emails_table.email"     => ['<>', ''],
+            $users_table . '.is_deleted' => 0,
+            'NOT'                     => [$emails_table . '.email' => null],
+            $emails_table . '.email'     => ['<>', ''],
         ];
 
         // Grouping uses the column collation (case insensitive), like the sign-in check.
         $shared = [];
         $iterator = $this->db->request([
             'SELECT'         => [
-                "$emails_table.email",
-                'COUNT DISTINCT' => "$emails_table.users_id AS owners",
+                $emails_table . '.email',
+                'COUNT DISTINCT' => $emails_table . '.users_id AS owners',
             ],
             'FROM'           => $emails_table,
             'INNER JOIN'     => $join,
             'WHERE'          => $where,
-            'GROUPBY'        => "$emails_table.email",
+            'GROUPBY'        => $emails_table . '.email',
             'HAVING'         => ['owners' => ['>', 1]],
-            'ORDERBY'        => "$emails_table.email",
+            'ORDERBY'        => $emails_table . '.email',
             'LIMIT'          => $limit + 1,
         ]);
         foreach ($iterator as $row) {
-            $shared[] = (string) $row['email'];
+            if (is_array($row)) {
+                $shared[] = Scalar::toString($row['email'] ?? '');
+            }
         }
 
         $truncated = count($shared) > $limit;
@@ -103,20 +105,24 @@ final class SharedEmails
 
         $iterator = $this->db->request([
             'SELECT'     => [
-                "$emails_table.email",
-                "$users_table.id",
-                "$users_table.name",
-                "$users_table.realname",
-                "$users_table.firstname",
+                $emails_table . '.email',
+                $users_table . '.id',
+                $users_table . '.name',
+                $users_table . '.realname',
+                $users_table . '.firstname',
             ],
             'DISTINCT'   => true,
             'FROM'       => $emails_table,
             'INNER JOIN' => $join,
-            'WHERE'      => $where + ["$emails_table.email" => $shared],
-            'ORDERBY'    => ["$users_table.name"],
+            'WHERE'      => $where + [$emails_table . '.email' => $shared],
+            'ORDERBY'    => [$users_table . '.name'],
         ]);
         foreach ($iterator as $row) {
-            $key = strtolower((string) $row['email']);
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $key = strtolower(Scalar::toString($row['email'] ?? ''));
             if (!isset($items[$key])) {
                 // Same address with a different case: attach it to the group found above.
                 foreach (array_keys($items) as $candidate) {
@@ -125,19 +131,21 @@ final class SharedEmails
                         break;
                     }
                 }
+
                 if (!isset($items[$key])) {
                     continue;
                 }
             }
 
-            $users_id = (int) $row['id'];
+            $users_id = Scalar::toInt($row['id'] ?? 0);
             if (isset($items[$key]['users'][$users_id])) {
                 continue;
             }
+
             $items[$key]['users'][$users_id] = [
                 'id'       => $users_id,
-                'name'     => (string) $row['name'],
-                'fullname' => trim(((string) $row['realname']) . ' ' . ((string) $row['firstname'])),
+                'name'     => Scalar::toString($row['name'] ?? ''),
+                'fullname' => trim(Scalar::toString($row['realname'] ?? '') . ' ' . Scalar::toString($row['firstname'] ?? '')),
                 'url'      => User::getFormURLWithID($users_id),
             ];
         }

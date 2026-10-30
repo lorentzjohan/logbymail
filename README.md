@@ -154,11 +154,14 @@ src/GlpiCompat.php              GLPI 11 / 12 differences (CSRF, re-authenticatio
 src/SharedEmails.php            Shared addresses report
 src/UserLists.php               Included / excluded users lists (validation, cleanup on purge)
 src/LoginThrottle.php           Brute-force protection (failure counters in the GLPI cache)
+src/Scalar.php                  Typed reading of database rows and cache entries
 src/Controller/ConfigController.php  Configuration page
 templates/config.html.twig      Configuration page view
 public/js/login-label.js        Login page label script
 locales/                        Translations (en_GB, fr_FR) and logbymail.pot template
-tests/Units/                    Unit tests (PHPUnit, GLPI development environment)
+tests/Units/                    Unit tests (PHPUnit)
+tests/Integration/              Integration tests inside GLPI, on its test database (PHPUnit)
+.github/workflows/              Continuous integration on GLPI 11 and 12
 ```
 
 ## Support the project

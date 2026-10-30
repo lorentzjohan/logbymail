@@ -77,6 +77,7 @@ final class LoginPageCustomizer
      */
     public static function registerHooks(): void
     {
+        /** @var array<string, array<string, mixed>> $PLUGIN_HOOKS */
         global $PLUGIN_HOOKS;
 
         try {
@@ -95,11 +96,11 @@ final class LoginPageCustomizer
                 ],
             ];
             $PLUGIN_HOOKS[Hooks::ADD_JAVASCRIPT_ANONYMOUS_PAGE]['logbymail'] = ['js/login-label.js'];
-        } catch (Throwable $e) {
+        } catch (Throwable $throwable) {
             global $PHPLOGGER;
             $PHPLOGGER->error(
-                sprintf('LogByMail: login page customization skipped: %s', $e->getMessage()),
-                ['exception' => $e]
+                sprintf('LogByMail: login page customization skipped: %s', $throwable->getMessage()),
+                ['exception' => $throwable],
             );
         }
     }

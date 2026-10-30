@@ -75,7 +75,7 @@ final class EmailLoginResolverTest extends TestCase
         $invalid = [];
         $this->assertSame(
             ['example.com', 'example.org'],
-            PluginConfig::parseDomains("Example.com\n@example.org, example.com;", $invalid)
+            PluginConfig::parseDomains("Example.com\n@example.org, example.com;", $invalid),
         );
         $this->assertSame([], $invalid);
 

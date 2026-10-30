@@ -11,6 +11,8 @@
 - The client IP follows the GLPI 12 trusted reverse proxies (`GLPI_TRUSTED_REVERSE_PROXIES`).
 - Installation: the plugin folder can stay owned by `root`, the web server only reads it.
 - Line endings are normalized to LF in the repository (`.gitattributes`).
+- Continuous integration on GLPI 11 and 12 (`.github/workflows/continuous-integration.yml`). The code passes PHP-CS-Fixer, PHPStan (max level), Psalm (with taint analysis), Rector, TwigCS and the licence headers check.
+- Integration tests running inside GLPI, on its test database: e-mail resolution rules, sign-in with the resolved login through GLPI's authentication, login form handling, sign-in log, brute-force protection with the GLPI cache, hooks, settings update and uninstall.
 
 ## [1.1.0] - 2026-10-29
 

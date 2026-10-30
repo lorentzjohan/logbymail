@@ -61,12 +61,13 @@ define('PLUGIN_LOGBYMAIL_MIN_PHP_VERSION', '8.2.0');
  */
 function plugin_init_logbymail(): void
 {
+    /** @var array<string, array<string, mixed>> $PLUGIN_HOOKS */
     global $PLUGIN_HOOKS;
 
     $PLUGIN_HOOKS[Hooks::CONFIG_PAGE]['logbymail'] = 'config';
 
     // Keep the included / excluded users lists clean when a user is purged.
-    $PLUGIN_HOOKS[Hooks::ITEM_PURGE]['logbymail'] = [User::class => [UserLists::class, 'onUserPurge']];
+    $PLUGIN_HOOKS[Hooks::ITEM_PURGE]['logbymail'] = [User::class => UserLists::onUserPurge(...)];
 
     // Translate an e-mail address typed in the login form into the matching GLPI login,
     // before GLPI's own authentication process (and 2FA) runs.
@@ -75,7 +76,7 @@ function plugin_init_logbymail(): void
     // "Login or e-mail" label on the login page. Registered on POST_INIT, once the
     // plugin translations are loaded.
     if (LoginPageCustomizer::isNeededForCurrentRequest()) {
-        $PLUGIN_HOOKS[Hooks::POST_INIT]['logbymail'] = [LoginPageCustomizer::class, 'registerHooks'];
+        $PLUGIN_HOOKS[Hooks::POST_INIT]['logbymail'] = LoginPageCustomizer::registerHooks(...);
     }
 }
 

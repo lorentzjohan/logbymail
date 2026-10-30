@@ -73,6 +73,7 @@ final class PluginConfigTest extends TestCase
         } catch (UnexpectedValueException) {
             $thrown = true;
         }
+
         $this->assertTrue($thrown);
     }
 
@@ -86,6 +87,7 @@ final class PluginConfigTest extends TestCase
         } catch (UnexpectedValueException) {
             $thrown = true;
         }
+
         $this->assertTrue($thrown);
     }
 }

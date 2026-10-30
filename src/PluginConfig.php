@@ -43,22 +43,34 @@ use function Safe\preg_split;
 /**
  * Plugin settings, stored in the GLPI `glpi_configs` table (context "plugin:logbymail").
  */
-final class PluginConfig
+final readonly class PluginConfig
 {
     public const CONTEXT = 'plugin:logbymail';
 
     public const ENABLED             = 'enabled';
+
     public const ONLY_DEFAULT_EMAIL  = 'only_default_email';
+
     public const ONLY_DYNAMIC_EMAIL  = 'only_dynamic_email';
+
     public const ALLOWED_DOMAINS     = 'allowed_domains';
+
     public const REPLACE_LOGIN_LABEL = 'replace_login_label';
+
     public const LOG_ENABLED         = 'log_enabled';
+
     public const INCLUDED_USERS      = 'included_users';
+
     public const EXCLUDED_USERS      = 'excluded_users';
+
     public const THROTTLE_ENABLED     = 'throttle_enabled';
+
     public const THROTTLE_MAX_ACCOUNT = 'throttle_max_per_account';
+
     public const THROTTLE_MAX_IP      = 'throttle_max_per_ip';
+
     public const THROTTLE_WINDOW      = 'throttle_window_minutes';
+
     public const THROTTLE_LOCKOUT     = 'throttle_lockout_minutes';
 
     /**
@@ -107,7 +119,7 @@ final class PluginConfig
     /**
      * @param array<string, string> $values
      */
-    private function __construct(private readonly array $values) {}
+    private function __construct(private array $values) {}
 
     public static function load(): self
     {
@@ -207,7 +219,7 @@ final class PluginConfig
      */
     public function getIncludedUserIds(): array
     {
-        return self::decodeUserIds($this->values[self::INCLUDED_USERS], self::INCLUDED_USERS);
+        return $this->decodeUserIds($this->values[self::INCLUDED_USERS], self::INCLUDED_USERS);
     }
 
     /**
@@ -219,7 +231,7 @@ final class PluginConfig
      */
     public function getExcludedUserIds(): array
     {
-        return self::decodeUserIds($this->values[self::EXCLUDED_USERS], self::EXCLUDED_USERS);
+        return $this->decodeUserIds($this->values[self::EXCLUDED_USERS], self::EXCLUDED_USERS);
     }
 
     /**
@@ -242,9 +254,10 @@ final class PluginConfig
                 }
             }
         }
+
         sort($normalized);
 
-        return array_values($normalized);
+        return $normalized;
     }
 
     /**
@@ -262,13 +275,14 @@ final class PluginConfig
      *
      * @return list<int>
      */
-    private static function decodeUserIds(string $json, string $setting): array
+    private function decodeUserIds(string $json, string $setting): array
     {
         try {
             $decoded = json_decode($json, true, 4, JSON_THROW_ON_ERROR);
-        } catch (JsonException $e) {
-            throw new UnexpectedValueException(sprintf('The "%s" setting is not valid JSON.', $setting), 0, $e);
+        } catch (JsonException $jsonException) {
+            throw new UnexpectedValueException(sprintf('The "%s" setting is not valid JSON.', $setting), 0, $jsonException);
         }
+
         if (!is_array($decoded) || !array_is_list($decoded)) {
             throw new UnexpectedValueException(sprintf('The "%s" setting is not a list of user ids.', $setting));
         }
@@ -297,6 +311,8 @@ final class PluginConfig
      *
      * @param list<string> $invalid Receives the entries that are not valid domain names.
      *
+     * @param-out list<string> $invalid
+     *
      * @return list<string>
      */
     public static function parseDomains(string $raw, array &$invalid = []): array
@@ -307,6 +323,10 @@ final class PluginConfig
         $parts = preg_split('/[\s,;]+/', $raw, -1, PREG_SPLIT_NO_EMPTY);
 
         foreach ($parts as $part) {
+            if (!is_string($part)) {
+                continue;
+            }
+
             $domain = strtolower(ltrim(trim($part), '@'));
             if ($domain === '') {
                 continue;

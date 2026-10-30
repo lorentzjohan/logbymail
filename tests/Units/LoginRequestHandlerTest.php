@@ -42,7 +42,7 @@ final class LoginRequestHandlerTest extends TestCase
     /**
      * @param array<string, string> $headers
      */
-    private static function buildRequest(string $method, string $path, array $headers = []): Request
+    private function buildRequest(string $method, string $path, array $headers = []): Request
     {
         $server = ['HTTP_HOST' => 'glpi.example.com'];
         foreach ($headers as $name => $value) {
@@ -62,16 +62,16 @@ final class LoginRequestHandlerTest extends TestCase
     {
         $_POST[LoginRequestHandler::LOGIN_FIELD] = 'john@example.com';
 
-        $this->assertSame('john@example.com', LoginRequestHandler::extractIdentifier(self::buildRequest('POST', '/front/login.php')));
-        $this->assertNull(LoginRequestHandler::extractIdentifier(self::buildRequest('GET', '/front/login.php')));
-        $this->assertNull(LoginRequestHandler::extractIdentifier(self::buildRequest('POST', '/front/user.form.php')));
-        $this->assertNull(LoginRequestHandler::extractIdentifier(self::buildRequest('POST', '/front/login.php.bak')));
-        $this->assertNull(LoginRequestHandler::extractIdentifier(self::buildRequest('POST', '/apirest.php/initSession')));
+        $this->assertSame('john@example.com', LoginRequestHandler::extractIdentifier($this->buildRequest('POST', '/front/login.php')));
+        $this->assertNull(LoginRequestHandler::extractIdentifier($this->buildRequest('GET', '/front/login.php')));
+        $this->assertNull(LoginRequestHandler::extractIdentifier($this->buildRequest('POST', '/front/user.form.php')));
+        $this->assertNull(LoginRequestHandler::extractIdentifier($this->buildRequest('POST', '/front/login.php.bak')));
+        $this->assertNull(LoginRequestHandler::extractIdentifier($this->buildRequest('POST', '/apirest.php/initSession')));
     }
 
     public function testNonEmailOrNonStringIdentifiersAreIgnored(): void
     {
-        $request = self::buildRequest('POST', '/front/login.php');
+        $request = $this->buildRequest('POST', '/front/login.php');
 
         $_POST[LoginRequestHandler::LOGIN_FIELD] = 'jdoe';
         $this->assertNull(LoginRequestHandler::extractIdentifier($request));
@@ -85,13 +85,13 @@ final class LoginRequestHandlerTest extends TestCase
 
     public function testCrossSiteRequestsAreIgnored(): void
     {
-        $this->assertTrue(LoginRequestHandler::isSameOriginRequest(self::buildRequest('POST', '/front/login.php', ['Sec-Fetch-Site' => 'same-origin'])));
-        $this->assertTrue(LoginRequestHandler::isSameOriginRequest(self::buildRequest('POST', '/front/login.php', ['Sec-Fetch-Site' => 'none'])));
-        $this->assertFalse(LoginRequestHandler::isSameOriginRequest(self::buildRequest('POST', '/front/login.php', ['Sec-Fetch-Site' => 'cross-site'])));
-        $this->assertFalse(LoginRequestHandler::isSameOriginRequest(self::buildRequest('POST', '/front/login.php', ['Sec-Fetch-Site' => 'same-site'])));
-        $this->assertTrue(LoginRequestHandler::isSameOriginRequest(self::buildRequest('POST', '/front/login.php', ['Origin' => 'http://glpi.example.com'])));
-        $this->assertFalse(LoginRequestHandler::isSameOriginRequest(self::buildRequest('POST', '/front/login.php', ['Origin' => 'https://evil.example.net'])));
-        $this->assertFalse(LoginRequestHandler::isSameOriginRequest(self::buildRequest('POST', '/front/login.php', ['Origin' => 'null'])));
-        $this->assertTrue(LoginRequestHandler::isSameOriginRequest(self::buildRequest('POST', '/front/login.php')));
+        $this->assertTrue(LoginRequestHandler::isSameOriginRequest($this->buildRequest('POST', '/front/login.php', ['Sec-Fetch-Site' => 'same-origin'])));
+        $this->assertTrue(LoginRequestHandler::isSameOriginRequest($this->buildRequest('POST', '/front/login.php', ['Sec-Fetch-Site' => 'none'])));
+        $this->assertFalse(LoginRequestHandler::isSameOriginRequest($this->buildRequest('POST', '/front/login.php', ['Sec-Fetch-Site' => 'cross-site'])));
+        $this->assertFalse(LoginRequestHandler::isSameOriginRequest($this->buildRequest('POST', '/front/login.php', ['Sec-Fetch-Site' => 'same-site'])));
+        $this->assertTrue(LoginRequestHandler::isSameOriginRequest($this->buildRequest('POST', '/front/login.php', ['Origin' => 'http://glpi.example.com'])));
+        $this->assertFalse(LoginRequestHandler::isSameOriginRequest($this->buildRequest('POST', '/front/login.php', ['Origin' => 'https://evil.example.net'])));
+        $this->assertFalse(LoginRequestHandler::isSameOriginRequest($this->buildRequest('POST', '/front/login.php', ['Origin' => 'null'])));
+        $this->assertTrue(LoginRequestHandler::isSameOriginRequest($this->buildRequest('POST', '/front/login.php')));
     }
 }

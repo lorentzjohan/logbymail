@@ -94,7 +94,7 @@ final class ConfigController extends AbstractController
         }
 
         return $this->render('@logbymail/config.html.twig', [
-            'form_url'               => self::getUrl($request),
+            'form_url'               => $this->getUrl($request),
             'config'                 => $config->toArray(),
             'domains'                => implode("\n", $config->getAllowedDomains()),
             'shared_emails'          => (new SharedEmails($DB))->find(self::SHARED_EMAILS_LIMIT),
@@ -105,7 +105,7 @@ final class ConfigController extends AbstractController
             'excluded_users'         => $excluded_users,
             'users_in_both'          => $users_in_both,
             'users_lists_unreadable' => $users_lists_unreadable,
-            'throttle_labels'        => self::getThrottleLabels(),
+            'throttle_labels'        => $this->getThrottleLabels(),
             'throttle_ranges'        => PluginConfig::THROTTLE_RANGES,
         ]);
     }
@@ -128,24 +128,24 @@ final class ConfigController extends AbstractController
             Session::addMessageAfterRedirect(
                 htmlescape(sprintf(
                     _n('Invalid domain: %s', 'Invalid domains: %s', count($invalid), 'logbymail'),
-                    implode(', ', array_slice($invalid, 0, 10))
+                    implode(', ', array_slice($invalid, 0, 10)),
                 )) . ' ' . __s('Nothing was saved.', 'logbymail'),
                 false,
-                ERROR
+                ERROR,
             );
-            return new RedirectResponse(self::getUrl($request));
+            return new RedirectResponse($this->getUrl($request));
         }
 
         if (count($domains) > PluginConfig::MAX_DOMAINS) {
             Session::addMessageAfterRedirect(
                 htmlescape(sprintf(
                     __('Too many domains: %d at most.', 'logbymail'),
-                    PluginConfig::MAX_DOMAINS
+                    PluginConfig::MAX_DOMAINS,
                 )) . ' ' . __s('Nothing was saved.', 'logbymail'),
                 false,
-                ERROR
+                ERROR,
             );
-            return new RedirectResponse(self::getUrl($request));
+            return new RedirectResponse($this->getUrl($request));
         }
 
         // An emptied multiple dropdown is submitted as an empty string, a filled one as an
@@ -158,18 +158,18 @@ final class ConfigController extends AbstractController
                 Session::addMessageAfterRedirect(
                     htmlescape(sprintf(
                         __('Too many users in a list: %d at most.', 'logbymail'),
-                        PluginConfig::MAX_LISTED_USERS
+                        PluginConfig::MAX_LISTED_USERS,
                     )) . ' ' . __s('Nothing was saved.', 'logbymail'),
                     false,
-                    ERROR
+                    ERROR,
                 );
-                return new RedirectResponse(self::getUrl($request));
+                return new RedirectResponse($this->getUrl($request));
             }
 
             $users_lists[$setting] = PluginConfig::encodeUserIds(UserLists::filterExisting($DB, $ids));
         }
 
-        $throttle_labels = self::getThrottleLabels();
+        $throttle_labels = $this->getThrottleLabels();
         $throttle        = [PluginConfig::THROTTLE_ENABLED => $input->getBoolean(PluginConfig::THROTTLE_ENABLED) ? '1' : '0'];
         foreach (PluginConfig::THROTTLE_RANGES as $setting => [$min, $max]) {
             $value = $submitted[$setting] ?? '';
@@ -180,13 +180,14 @@ final class ConfigController extends AbstractController
                         __('%1$s: a whole number between %2$d and %3$d is expected.', 'logbymail'),
                         $throttle_labels[$setting],
                         $min,
-                        $max
+                        $max,
                     )) . ' ' . __s('Nothing was saved.', 'logbymail'),
                     false,
-                    ERROR
+                    ERROR,
                 );
-                return new RedirectResponse(self::getUrl($request));
+                return new RedirectResponse($this->getUrl($request));
             }
+
             $throttle[$setting] = (string) (int) $value;
         }
 
@@ -201,13 +202,13 @@ final class ConfigController extends AbstractController
 
         Session::addMessageAfterRedirect(__s('Settings saved', 'logbymail'));
 
-        return new RedirectResponse(self::getUrl($request));
+        return new RedirectResponse($this->getUrl($request));
     }
 
     /**
      * @return array<string, string>
      */
-    private static function getThrottleLabels(): array
+    private function getThrottleLabels(): array
     {
         return [
             PluginConfig::THROTTLE_MAX_ACCOUNT => __('Failed attempts allowed per account', 'logbymail'),
@@ -217,7 +218,7 @@ final class ConfigController extends AbstractController
         ];
     }
 
-    private static function getUrl(Request $request): string
+    private function getUrl(Request $request): string
     {
         return $request->getBasePath() . '/plugins/logbymail/config';
     }

@@ -33,6 +33,7 @@
 
 namespace GlpiPlugin\Logbymail;
 
+use Closure;
 use Psr\SimpleCache\CacheInterface;
 
 /**
@@ -47,20 +48,21 @@ use Psr\SimpleCache\CacheInterface;
  * GLPI checks any password, until the lockout ends. A successful sign-in resets the account
  * counter of that IP.
  */
-final class LoginThrottle
+final readonly class LoginThrottle
 {
     private const KEY_PREFIX = 'logbymail_throttle_';
 
     public const SCOPE_ACCOUNT = 'account';
+
     public const SCOPE_IP      = 'ip';
 
     public function __construct(
-        private readonly CacheInterface $cache,
-        private readonly int $max_per_account,
-        private readonly int $max_per_ip,
-        private readonly int $window_seconds,
-        private readonly int $lockout_seconds,
-        private readonly ?\Closure $clock = null,
+        private CacheInterface $cache,
+        private int $max_per_account,
+        private int $max_per_ip,
+        private int $window_seconds,
+        private int $lockout_seconds,
+        private ?Closure $clock = null,
     ) {}
 
     /**
@@ -69,9 +71,10 @@ final class LoginThrottle
      */
     public static function fromConfig(PluginConfig $config): ?self
     {
+        /** @var CacheInterface $GLPI_CACHE */
         global $GLPI_CACHE;
 
-        if (!$config->isThrottleEnabled() || !($GLPI_CACHE instanceof CacheInterface)) {
+        if (!$config->isThrottleEnabled()) {
             return null;
         }
 
@@ -96,8 +99,8 @@ final class LoginThrottle
     {
         $now       = $this->now();
         $remaining = 0;
-        foreach ($this->getCounters($login, $ip) as $key => $limit) {
-            $locked_until = (int) ($this->read($key)['locked_until'] ?? 0);
+        foreach (array_keys($this->getCounters($login, $ip)) as $key) {
+            $locked_until = $this->read($key)['locked_until'] ?? 0;
             if ($locked_until > $now) {
                 $remaining = max($remaining, $locked_until - $now);
             }
@@ -120,11 +123,13 @@ final class LoginThrottle
             if ($counter === null || $counter['first'] + $this->window_seconds <= $now) {
                 $counter = ['count' => 0, 'first' => $now, 'locked_until' => 0];
             }
+
             $counter['count']++;
             if ($counter['count'] >= $limit && $counter['locked_until'] <= $now) {
                 $counter['locked_until'] = $now + $this->lockout_seconds;
                 $locked[] = str_starts_with($key, self::KEY_PREFIX . self::SCOPE_IP) ? self::SCOPE_IP : self::SCOPE_ACCOUNT;
             }
+
             $this->cache->set($key, $counter, max($this->window_seconds, $this->lockout_seconds) + 60);
         }
 
@@ -171,11 +176,15 @@ final class LoginThrottle
             return null;
         }
 
-        return ['count' => (int) $value['count'], 'first' => (int) $value['first'], 'locked_until' => (int) $value['locked_until']];
+        return [
+            'count'        => Scalar::toInt($value['count']),
+            'first'        => Scalar::toInt($value['first']),
+            'locked_until' => Scalar::toInt($value['locked_until']),
+        ];
     }
 
     private function now(): int
     {
-        return $this->clock !== null ? (int) ($this->clock)() : time();
+        return $this->clock instanceof Closure ? Scalar::toInt(($this->clock)()) : time();
     }
 }

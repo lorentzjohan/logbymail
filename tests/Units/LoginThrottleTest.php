@@ -36,6 +36,7 @@ namespace GlpiPlugin\Logbymail\Tests\Units;
 use DateInterval;
 use GlpiPlugin\Logbymail\LoginThrottle;
 use GlpiPlugin\Logbymail\PluginConfig;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Psr\SimpleCache\CacheInterface;
 
@@ -48,7 +49,7 @@ final class LoginThrottleTest extends TestCase
         return new LoginThrottle($cache, $per_account, $per_ip, 900, 600, fn(): int => $this->now);
     }
 
-    private static function cache(): CacheInterface
+    private function cache(): CacheInterface
     {
         return new class implements CacheInterface {
             /** @var array<string, mixed> */
@@ -59,11 +60,12 @@ final class LoginThrottleTest extends TestCase
                 return $this->data[$key] ?? $default;
             }
 
-            public function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
+            public function set(string $key, mixed $value, int|DateInterval|null $ttl = null): bool
             {
                 if (preg_match('/[{}()\/\\\\@:]/', $key) === 1) {
-                    throw new \InvalidArgumentException('Invalid PSR-16 key ' . $key);
+                    throw new InvalidArgumentException('Invalid PSR-16 key ' . $key);
                 }
+
                 $this->data[$key] = $value;
                 return true;
             }
@@ -85,7 +87,7 @@ final class LoginThrottleTest extends TestCase
                 return [];
             }
 
-            public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
+            public function setMultiple(iterable $values, int|DateInterval|null $ttl = null): bool
             {
                 return true;
             }
@@ -104,7 +106,7 @@ final class LoginThrottleTest extends TestCase
 
     public function testAccountIsLockedAfterTheLimit(): void
     {
-        $throttle = $this->throttle(self::cache());
+        $throttle = $this->throttle($this->cache());
 
         $this->assertSame([], $throttle->recordFailure('jdoe', '192.0.2.10'));
         $this->assertSame([], $throttle->recordFailure('JDoe ', '192.0.2.10'));
@@ -122,7 +124,7 @@ final class LoginThrottleTest extends TestCase
 
     public function testFailuresOutsideTheWindowAreForgotten(): void
     {
-        $throttle = $this->throttle(self::cache());
+        $throttle = $this->throttle($this->cache());
 
         $throttle->recordFailure('jdoe', '192.0.2.10');
         $throttle->recordFailure('jdoe', '192.0.2.10');
@@ -133,7 +135,7 @@ final class LoginThrottleTest extends TestCase
 
     public function testSuccessResetsTheAccountCounterOnly(): void
     {
-        $throttle = $this->throttle(self::cache(), 3, 4);
+        $throttle = $this->throttle($this->cache(), 3, 4);
 
         $throttle->recordFailure('jdoe', '192.0.2.10');
         $throttle->recordFailure('jdoe', '192.0.2.10');
@@ -147,11 +149,12 @@ final class LoginThrottleTest extends TestCase
 
     public function testPasswordSprayingLocksTheIp(): void
     {
-        $throttle = $this->throttle(self::cache(), 3, 5);
+        $throttle = $this->throttle($this->cache(), 3, 5);
 
         foreach (['a', 'b', 'c', 'd'] as $login) {
             $this->assertSame([], $throttle->recordFailure($login . '@example.com', '192.0.2.10'));
         }
+
         $this->assertSame(['ip'], $throttle->recordFailure('e@example.com', '192.0.2.10'));
         $this->assertSame(600, $throttle->getRemainingLockTime('anybody', '192.0.2.10'));
         $this->assertSame(0, $throttle->getRemainingLockTime('anybody', '192.0.2.11'));
@@ -159,11 +162,12 @@ final class LoginThrottleTest extends TestCase
 
     public function testIpLimitCanBeDisabled(): void
     {
-        $throttle = $this->throttle(self::cache(), 3, 0);
+        $throttle = $this->throttle($this->cache(), 3, 0);
 
         foreach (range(1, 20) as $i) {
             $throttle->recordFailure('user' . $i, '192.0.2.10');
         }
+
         $this->assertSame(0, $throttle->getRemainingLockTime('user99', '192.0.2.10'));
     }
 

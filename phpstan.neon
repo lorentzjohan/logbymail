@@ -15,3 +15,6 @@ parameters:
         - ../../stubs/glpi_constants.php
         - ../../vendor/autoload.php
     treatPhpDocTypesAsCertain: false
+    # The plugin supports GLPI 11 and 12: a few checks are always true on one version and always
+    # false on the other, so some inline ignores only match on one of them.
+    reportUnmatchedIgnoredErrors: false
