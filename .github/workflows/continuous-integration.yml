@@ -13,6 +13,10 @@ concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
 
+permissions:
+  contents: "read"
+  pull-requests: "read"
+
 jobs:
   matrix-glpi11:
     uses: "glpi-project/plugin-ci-workflows/.github/workflows/generate-ci-matrix.yml@8f514e933b87372ee57c57f2ed484956c7f5cb8e" # v1.30.4
