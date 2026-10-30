@@ -3,7 +3,7 @@
 # This file is distributed under the MIT license.
 msgid ""
 msgstr ""
-"Project-Id-Version: logbymail 1.2.0\n"
+"Project-Id-Version: logbymail 1.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2026-10-28 00:00+0000\n"
 "Last-Translator: LORENTZ Johan\n"

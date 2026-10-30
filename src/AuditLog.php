@@ -38,7 +38,7 @@ use Toolbox;
 use function Safe\preg_replace;
 
 /**
- * Writes e-mail sign-in attempts to `files/_log/logbymail.log`.
+ * Writes e-mail sign-in attempts to `logbymail.log`, in the GLPI log directory.
  *
  * One `key=value` line per attempt, easy to read and to parse (grep, fail2ban...).
  * The password is never available to the plugin and is never written.

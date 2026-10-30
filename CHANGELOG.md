@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.1] - 2026-10-30
+
+### Changed
+- Continuous integration: the GLPI reusable workflows are pinned to a full commit SHA (supply chain security), and Dependabot proposes their updates.
+- Release archives built with `git archive` no longer contain the development files (`.gitattributes` export-ignore).
+- Plugin information points to the GitHub repository (homepage, downloads, issues, README).
+
+### Documentation
+- Screenshot of the configuration page.
+- New "Update" section; console commands run as the web server user, as recommended by GLPI.
+- Location of `logbymail.log` (GLPI log directory), files kept after an uninstall.
+- Scope of the brute-force protection: web login form only (the APIs have their own sign-in endpoints, two-factor codes are rate limited by GLPI).
+
 ## [1.2.0] - 2026-10-29
 
 ### Added

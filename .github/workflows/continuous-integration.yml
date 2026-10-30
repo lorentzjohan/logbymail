@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   matrix-glpi11:
-    uses: "glpi-project/plugin-ci-workflows/.github/workflows/generate-ci-matrix.yml@v1"
+    uses: "glpi-project/plugin-ci-workflows/.github/workflows/generate-ci-matrix.yml@8f514e933b87372ee57c57f2ed484956c7f5cb8e" # v1.30.4
     with:
       glpi-version: "11.0.x"
   ci-glpi11:
@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.matrix-glpi11.outputs.matrix) }}
-    uses: "glpi-project/plugin-ci-workflows/.github/workflows/continuous-integration.yml@v1"
+    uses: "glpi-project/plugin-ci-workflows/.github/workflows/continuous-integration.yml@8f514e933b87372ee57c57f2ed484956c7f5cb8e" # v1.30.4
     with:
       plugin-key: "logbymail"
       glpi-version: "${{ matrix.glpi-version }}"
@@ -32,7 +32,7 @@ jobs:
       db-image: "${{ matrix.db-image }}"
 
   matrix-glpi12:
-    uses: "glpi-project/plugin-ci-workflows/.github/workflows/generate-ci-matrix.yml@v1"
+    uses: "glpi-project/plugin-ci-workflows/.github/workflows/generate-ci-matrix.yml@8f514e933b87372ee57c57f2ed484956c7f5cb8e" # v1.30.4
     with:
       glpi-version: "12.0.x"
   ci-glpi12:
@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.matrix-glpi12.outputs.matrix) }}
-    uses: "glpi-project/plugin-ci-workflows/.github/workflows/continuous-integration.yml@v1"
+    uses: "glpi-project/plugin-ci-workflows/.github/workflows/continuous-integration.yml@8f514e933b87372ee57c57f2ed484956c7f5cb8e" # v1.30.4
     with:
       plugin-key: "logbymail"
       glpi-version: "${{ matrix.glpi-version }}"

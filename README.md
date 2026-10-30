@@ -16,7 +16,7 @@
 
 Lets users sign in to GLPI with their **email address** as well as with their **login**.
 
-- Version: 1.2.0
+- Version: 1.2.1
 - Author: [lorentzjohan (LORENTZ Johan)](https://github.com/lorentzjohan)
 - License: MIT
 - Compatibility: GLPI 11.x and 12.x (tested on 11.0.12 and 12.0.1), PHP 8.2 to 8.5 (8.3 minimum with GLPI 12)
@@ -55,11 +55,21 @@ When an address is refused, the user sees the usual GLPI error message. Nothing 
 From the command line:
 
 ```bash
-php bin/console plugin:install logbymail -u glpi
-php bin/console plugin:activate logbymail
+sudo -u www-data php bin/console plugin:install logbymail -u glpi
+sudo -u www-data php bin/console plugin:activate logbymail
 ```
 
+As recommended by GLPI, run the console commands as the web server user.
+
+## Update
+
+1. Replace the `plugins/logbymail` folder.
+2. In **Setup > Plugins**, click **Update**: the settings and the users lists are kept, new settings get their default values.
+3. Clear the cache: `sudo -u www-data php bin/console cache:clear`.
+
 ## Configuration
+
+<p align="center"><img src="docs/screenshots/configuration.png" alt="LogByMail configuration page" width="800"></p>
 
 Open **Setup > Plugins > LogByMail > Configure** (URL: `/plugins/logbymail/config`). The page requires the update right on the general setup. On GLPI 12, it also requires a recent re-authentication, like the other setup pages; this mechanism does not exist on GLPI 11.
 
@@ -72,7 +82,7 @@ Open **Setup > Plugins > LogByMail > Configure** (URL: `/plugins/logbymail/confi
 | Only these users can sign in with their email | (empty = all users) | Search and select users, as in a ticket. Other users must sign in with their login |
 | These users can never sign in with their email | (empty) | Search and select users. They can still sign in with their login. Takes priority over the list above |
 | Show "Login or email" on the login page | Yes | Only changes the label of the login field |
-| Log email sign-in attempts | Yes | Writes to `files/_log/logbymail.log` |
+| Log email sign-in attempts | Yes | Writes `logbymail.log` in the GLPI log directory (`files/_log/` by default) |
 | Lock sign-in after repeated failures | Yes | Brute-force protection of the login form (see below) |
 | Failed attempts allowed per account | 5 | Counted per account **and** per IP address |
 | Failed attempts allowed per IP address | 30 | All accounts together; 0 = no limit |
@@ -92,6 +102,8 @@ The page also lists the **email addresses shared** by several users. These addre
 ## Brute-force protection
 
 GLPI does not limit password attempts on its login form. LogByMail adds this protection to every web sign-in, with a login **or** an email address (an email address counts on the account it belongs to, so alternating both changes nothing).
+
+It covers the web login form only: the REST API and the high-level API have their own sign-in endpoints, and the two-factor authentication codes are already rate limited by GLPI.
 
 - **Per account and per IP address:** after 5 failures within 15 minutes, the account is locked for 15 minutes **from this IP address only**. Nobody can lock a user out by failing on purpose from another computer.
 - **Per IP address:** after 30 failures within 15 minutes on any accounts, the IP address is locked for 15 minutes. This stops password spraying.
@@ -152,6 +164,8 @@ Good to know:
 
 **Setup > Plugins > Uninstall** deletes the plugin settings. Reinstalling without uninstalling first keeps the existing settings.
 
+The log file `logbymail.log` is kept (delete it by hand if needed). The brute-force counters expire by themselves, or are cleared with `php bin/console cache:clear`.
+
 ## Structure
 
 ```
@@ -160,7 +174,7 @@ hook.php                        Install / uninstall
 src/LoginRequestHandler.php     Login form interception
 src/EmailLoginResolver.php      Email -> login resolution rules
 src/PluginConfig.php            Settings (glpi_configs table)
-src/AuditLog.php                Log file files/_log/logbymail.log
+src/AuditLog.php                Log file logbymail.log (GLPI log directory)
 src/LoginPageCustomizer.php     "Login or email" label
 src/GlpiCompat.php              GLPI 11 / 12 differences (CSRF, re-authentication, IP)
 src/SharedEmails.php            Shared addresses report
@@ -174,6 +188,7 @@ locales/                        Translations (en_GB, fr_FR) and logbymail.pot te
 tests/Units/                    Unit tests (PHPUnit)
 tests/Integration/              Integration tests inside GLPI, on its test database (PHPUnit)
 .github/workflows/              Continuous integration on GLPI 11 and 12
+docs/screenshots/               Screenshots of this README
 ```
 
 ## Support the project
